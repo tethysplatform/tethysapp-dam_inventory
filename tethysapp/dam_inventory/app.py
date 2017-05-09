@@ -24,13 +24,17 @@ class DamInventory(TethysAppBase):
         """
         UrlMap = url_map_maker(self.root_url)
 
-        url_maps = (UrlMap(name='home',
-                           url='dam-inventory',
-                           controller='dam_inventory.controllers.home'),
-                    # This is an example UrlMap for a REST API endpoint
-                    # UrlMap(name='api_get_data',
-                    #        url='dam-inventory/api/get_data',
-                    #        controller='dam_inventory.api.get_data'),
+        url_maps = (
+            UrlMap(
+                name='home',
+                url='dam-inventory',
+                controller='dam_inventory.controllers.home'
+            ),
+            UrlMap(
+                name='add_dam',
+                url='dam-inventory/add-dam',
+                controller='dam_inventory.controllers.add_dam'
+            )
         )
 
         return url_maps
