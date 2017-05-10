@@ -149,6 +149,5 @@ def list_dams(request):
     Show all dams in a table view.
     """
     dams = get_all_dams()
-    print(dams)
     context = {'dams': dams}
     return render(request, 'dam_inventory/list_dams.html', context)
