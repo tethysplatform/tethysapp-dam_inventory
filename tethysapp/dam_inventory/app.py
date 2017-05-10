@@ -1,4 +1,5 @@
 from tethys_sdk.base import TethysAppBase, url_map_maker
+from tethys_sdk.app_settings import PersistentStoreDatabaseSetting
 from tethys_sdk.app_settings import CustomSetting
 
 
@@ -57,3 +58,18 @@ class DamInventory(TethysAppBase):
             ),
         )
         return custom_settings
+
+    def persistent_store_settings(self):
+        """
+        Define Persistent Store Settings.
+        """
+        ps_settings = (
+            PersistentStoreDatabaseSetting(
+                name='primary_db',
+                description='primary database',
+                initializer='dam_inventory.model.init_primary_db',
+                required=True
+            ),
+        )
+
+        return ps_settings
