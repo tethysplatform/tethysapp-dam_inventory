@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 
-from tethys_sdk.gizmos import MapView, Button, TextInput, DatePicker, SelectInput
+from tethys_sdk.gizmos import MapView, Button, TextInput, DatePicker, SelectInput, MVDraw, MVView
 from .model import add_new_dam, get_all_dams
 
 
@@ -41,12 +41,14 @@ def add_dam(request):
     Controller for the Add Dam page.
     """
     # Default Values
+    location = ''
     name = ''
-    owner = 'reclamation'
+    owner = 'Reclamation'
     river = ''
     date_built = ''
 
     # Errors
+    location_error = ''
     name_error = ''
     owner_error = ''
     river_error = ''
@@ -56,12 +58,17 @@ def add_dam(request):
     if request.POST and 'add-button' in request.POST:
         # Get values
         has_errors = False
+        location = request.POST.get('geometry', None)
         name = request.POST.get('name', None)
         owner = request.POST.get('owner', None)
         river = request.POST.get('river', None)
         date_built = request.POST.get('date-built', None)
 
         # Validate
+        if not location:
+            has_errors = True
+            location_error = 'Location is required.'
+
         if not name:
             has_errors = True
             name_error = 'Name is required.'
@@ -75,12 +82,33 @@ def add_dam(request):
             date_error = 'Required.'
 
         if not has_errors:
-            add_new_dam(name=name, owner=owner, river=river, date_built=date_built)
+            add_new_dam(location=location, name=name, owner=owner, river=river, date_built=date_built)
             return redirect(reverse('dam_inventory:home'))
 
         messages.error(request, "Please fix errors.")
 
     # Define form gizmos
+    initial_view = MVView(
+        projection='EPSG:4326',
+        center=[-98.6, 39.8],
+        zoom=3.5
+    )
+
+    drawing_options = MVDraw(
+        controls=['Modify', 'Delete', 'Move', 'Point'],
+        initial='Point',
+        output_format='GeoJSON',
+        point_color='#FF0000'
+    )
+
+    location_input = MapView(
+        height='300px',
+        width='100%',
+        basemap='OpenStreetMap',
+        draw=drawing_options,
+        view=initial_view
+    )
+
     name_input = TextInput(
         display_text='Name',
         name='name',
@@ -92,7 +120,7 @@ def add_dam(request):
         display_text='Owner',
         name='owner',
         multiple=False,
-        options=[('Reclamation', 'reclamation'), ('Army Corp', 'armycorp'), ('Other', 'other')],
+        options=[('Reclamation', 'Reclamation'), ('Army Corp', 'Army Corp'), ('Other', 'Other')],
         initial=owner,
         error=owner_error
     )
@@ -132,6 +160,8 @@ def add_dam(request):
     )
 
     context = {
+        'location_input': location_input,
+        'location_error': location_error,
         'name_input': name_input,
         'owner_input': owner_input,
         'river_input': river_input,

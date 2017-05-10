@@ -4,7 +4,7 @@ import json
 from .app import DamInventory as app
 
 
-def add_new_dam(name, owner, river, date_built):
+def add_new_dam(location, name, owner, river, date_built):
     """
     Persist new dam.
     """
@@ -12,6 +12,7 @@ def add_new_dam(name, owner, river, date_built):
     new_dam_id = uuid.uuid4()
     dam_dict = {
         'id': str(new_dam_id),
+        'location': location,
         'name': name,
         'owner': owner,
         'river': river,
