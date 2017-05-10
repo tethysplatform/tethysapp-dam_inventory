@@ -9,7 +9,9 @@ def add_new_dam(name, owner, river, date_built):
     Persist new dam.
     """
     # Serialize data to json
+    new_dam_id = uuid.uuid4()
     dam_dict = {
+        'id': str(new_dam_id),
         'name': name,
         'owner': owner,
         'river': river,
@@ -26,7 +28,6 @@ def add_new_dam(name, owner, river, date_built):
         os.mkdir(dams_dir)
 
     # Name of the file is its id
-    new_dam_id = uuid.uuid4()
     file_name = str(new_dam_id) + '.json'
     file_path = os.path.join(dams_dir, file_name)
 

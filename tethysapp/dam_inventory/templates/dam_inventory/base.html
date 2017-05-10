@@ -16,7 +16,9 @@
   <li class="title">App Navigation</li>
   {% url 'dam_inventory:home' as home_url %}
   {% url 'dam_inventory:add_dam' as add_dam_url %}
+  {% url 'dam_inventory:dams' as list_dam_url %}
   <li class="{% if request.path == home_url %}active{% endif %}"><a href="{{ home_url }}">Home</a></li>
+  <li class="{% if request.path == list_dam_url %}active{% endif %}"><a href="{{ list_dam_url }}">Dams</a></li>
   <li class="{% if request.path == add_dam_url %}active{% endif %}"><a href="{{ add_dam_url }}">Add Dam</a></li>
 {% endblock %}
 
