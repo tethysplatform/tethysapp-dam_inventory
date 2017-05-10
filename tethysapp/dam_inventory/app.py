@@ -17,7 +17,6 @@ class DamInventory(TethysAppBase):
     enable_feedback = False
     feedback_emails = []
 
-
     def url_maps(self):
         """
         Add controllers
