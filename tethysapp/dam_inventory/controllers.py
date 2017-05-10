@@ -19,16 +19,21 @@ def home(request):
     lng_list = []
 
     for dam in dams:
-        dam_location = dam.pop('location')
-        lat_list.append(dam_location['coordinates'][1])
-        lng_list.append(dam_location['coordinates'][0])
+        print(dam.name)
+        lat_list.append(dam.latitude)
+        lng_list.append(dam.longitude)
 
         dam_feature = {
           'type': 'Feature',
           'geometry': {
-              'type': dam_location['type'],
-              'coordinates': dam_location['coordinates'],
-              'properties': dam
+              'type': 'Point',
+              'coordinates': [dam.longitude, dam.latitude],
+              'properties': {
+                  'name': dam.name,
+                  'owner': dam.owner,
+                  'river': dam.river,
+                  'date_built': dam.date_built
+               }
           }
         }
         features.append(dam_feature)
