@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 
-from tethys_sdk.gizmos import MapView, Button, TextInput, DatePicker, SelectInput, MVDraw, MVView
+from tethys_sdk.gizmos import MapView, Button, TextInput, DatePicker, SelectInput, MVDraw, MVView, MVLayer
 from .model import add_new_dam, get_all_dams
 
 
@@ -12,11 +12,64 @@ def home(request):
     """
     Controller for the app home page.
     """
+    # Get list of dams and create dams MVLayer:
+    dams = get_all_dams()
+    features = []
+    lat_list = []
+    lng_list = []
+
+    for dam in dams:
+        dam_location = dam.pop('location')
+        lat_list.append(dam_location['coordinates'][1])
+        lng_list.append(dam_location['coordinates'][0])
+
+        dam_feature = {
+          'type': 'Feature',
+          'geometry': {
+              'type': dam_location['type'],
+              'coordinates': dam_location['coordinates'],
+              'properties': dam
+          }
+        }
+        features.append(dam_feature)
+
+    dams_feature_collection = {
+        'type': 'FeatureCollection',
+        'crs': {
+            'type': 'name',
+            'properties': {
+                'name': 'EPSG:4326'
+            }
+        },
+        'features': features
+    }
+
+    dams_layer = MVLayer(
+        source='GeoJSON',
+        options=dams_feature_collection,
+        legend_title='Dams'
+    )
+
+    # Define view centered on dam locations
+    try:
+        view_center = [sum(lng_list) / float(len(lng_list)), sum(lat_list) / float(len(lat_list))]
+    except ZeroDivisionError:
+        view_center = [-98.6, 39.8]
+
+    view_options = MVView(
+        projection='EPSG:4326',
+        center=view_center,
+        zoom=6,
+        maxZoom=18,
+        minZoom=2
+    )
+
     dam_inventory_map = MapView(
         height='100%',
         width='100%',
-        layers=[],
+        layers=[dams_layer],
         basemap='OpenStreetMap',
+        view=view_options
     )
 
     add_dam_button = Button(
