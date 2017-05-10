@@ -1,0 +1,25 @@
+{% extends "dam_inventory/base.html" %}
+
+{% block app_content %}
+  <h1>Dams</h1>
+  <table class="table table-hover">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Owner</th>
+        <th>River</th>
+        <th>Date Built</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for dam in dams %}
+        <tr>
+          <td>{{ dam.name }}</td>
+          <td>{{ dam.owner }}</td>
+          <td>{{ dam.river }}</td>
+          <td>{{ dam.date_built }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}
