@@ -24,13 +24,13 @@ def home(request):
         lng_list.append(dam_location['coordinates'][0])
 
         dam_feature = {
-          'type': 'Feature',
-          'geometry': {
-              'type': dam_location['type'],
-              'coordinates': dam_location['coordinates'],
-              'properties': dam
-          }
+            'type': 'Feature',
+            'geometry': {
+                'type': dam_location['type'],
+                'coordinates': dam_location['coordinates'],
+            },
         }
+
         features.append(dam_feature)
 
     dams_feature_collection = {
