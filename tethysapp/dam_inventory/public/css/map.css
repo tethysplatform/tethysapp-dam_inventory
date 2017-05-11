@@ -1,3 +1,7 @@
+.popover-content {
+    width: 240px;
+}
+
 #inner-app-content {
     padding: 0;
 }

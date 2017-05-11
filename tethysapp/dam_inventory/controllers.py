@@ -19,7 +19,6 @@ def home(request):
     lng_list = []
 
     for dam in dams:
-        print(dam.name)
         lat_list.append(dam.latitude)
         lng_list.append(dam.longitude)
 
