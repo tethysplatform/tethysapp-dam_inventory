@@ -4,6 +4,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 
 from tethys_sdk.gizmos import MapView, Button, TextInput, DatePicker, SelectInput, MVDraw, MVView, MVLayer
+from tethys_sdk.permissions import permission_required, has_permission
 from .model import add_new_dam, get_all_dams
 
 
@@ -89,13 +90,14 @@ def home(request):
     
     context = {
         'dam_inventory_map': dam_inventory_map,
-        'add_dam_button': add_dam_button
+        'add_dam_button': add_dam_button,
+        'can_add_dams': has_permission(request, 'add_dams')
     }
 
     return render(request, 'dam_inventory/home.html', context)
 
 
-@login_required()
+@permission_required('add_dams')
 def add_dam(request):
     """
     Controller for the Add Dam page.
@@ -228,6 +230,7 @@ def add_dam(request):
         'date_built_input': date_built,
         'add_button': add_button,
         'cancel_button': cancel_button,
+        'can_add_dams': has_permission(request, 'add_dams')
     }
 
     return render(request, 'dam_inventory/add_dam.html', context)
@@ -239,5 +242,8 @@ def list_dams(request):
     Show all dams in a table view.
     """
     dams = get_all_dams()
-    context = {'dams': dams}
+    context = {
+        'dams': dams,
+        'can_add_dams': has_permission(request, 'add_dams')
+    }
     return render(request, 'dam_inventory/list_dams.html', context)
