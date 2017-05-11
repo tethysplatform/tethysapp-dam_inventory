@@ -1,0 +1,11 @@
+.popover-content {
+    width: 240px;
+}
+
+#inner-app-content {
+    padding: 0;
+}
+
+#app-content, #inner-app-content, #map_view_outer_container {
+    height: 100%;
+}
