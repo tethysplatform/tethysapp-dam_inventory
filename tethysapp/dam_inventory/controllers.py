@@ -24,17 +24,19 @@ def home(request):
         lng_list.append(dam.longitude)
 
         dam_feature = {
-          'type': 'Feature',
-          'geometry': {
-              'type': 'Point',
-              'coordinates': [dam.longitude, dam.latitude],
-              'properties': {
-                  'name': dam.name,
-                  'owner': dam.owner,
-                  'river': dam.river,
-                  'date_built': dam.date_built
-               }
-          }
+            'type': 'Feature',
+            'geometry': {
+                'type': 'Point',
+                'coordinates': [dam.longitude, dam.latitude],
+
+            },
+            'properties': {
+                'id': dam.id,
+                'name': dam.name,
+                'owner': dam.owner,
+                'river': dam.river,
+                'date_built': dam.date_built
+            }
         }
 
         features.append(dam_feature)
@@ -64,7 +66,8 @@ def home(request):
                     }
                 }
             }
-        }
+        },
+        feature_selection=True
     )
 
     # Define view centered on dam locations
