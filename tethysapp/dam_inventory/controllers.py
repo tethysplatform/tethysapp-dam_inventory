@@ -126,13 +126,17 @@ def add_dam(request):
             has_errors = True
             name_error = 'Name is required.'
 
+        if not owner:
+            has_errors = True
+            owner_error = 'Owner is required.'
+
         if not river:
             has_errors = True
-            river_error = 'Required.'
+            river_error = 'River is required.'
 
         if not date_built:
             has_errors = True
-            date_error = 'Required.'
+            date_error = 'Date Built is required.'
 
         if not has_errors:
             add_new_dam(location=location, name=name, owner=owner, river=river, date_built=date_built)
