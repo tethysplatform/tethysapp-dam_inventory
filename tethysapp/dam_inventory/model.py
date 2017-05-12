@@ -55,6 +55,10 @@ def get_all_dams():
 
     # Open each file and convert contents to python objects
     for dam_json in os.listdir(dams_dir):
+        # Make sure we are only looking at json files
+        if '.json' not in dam_json:
+            continue
+
         dam_json_path = os.path.join(dams_dir, dam_json)
         with open(dam_json_path, 'r') as f:
             dam_dict = json.loads(f.readlines()[0])
