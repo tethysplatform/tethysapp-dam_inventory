@@ -12,7 +12,9 @@
 {% endblock %}
 
 {% block app_actions %}
-  {% gizmo add_dam_button %}
+  {% if can_add_dams %}
+    {% gizmo add_dam_button %}
+  {% endif %}
 {% endblock %}
 
 {% block scripts %}
