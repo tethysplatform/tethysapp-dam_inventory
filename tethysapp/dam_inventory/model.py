@@ -1,5 +1,3 @@
-import os
-import uuid
 import json
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, Float, String
