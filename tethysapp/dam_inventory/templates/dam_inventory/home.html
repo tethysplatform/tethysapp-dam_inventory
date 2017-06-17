@@ -1,5 +1,5 @@
 {% extends "dam_inventory/base.html" %}
-{% load tethys_gizmos %}
+{% load tethys_gizmos staticfiles %}
 
 {% block app_content %}
   {% gizmo dam_inventory_map %}
@@ -7,4 +7,9 @@
 
 {% block app_actions %}
   {% gizmo add_dam_button %}
+{% endblock %}
+
+{% block styles %}
+    {{ block.super }}
+    <link href="{% static 'dam_inventory/css/map.css' %}" rel="stylesheet"/>
 {% endblock %}
