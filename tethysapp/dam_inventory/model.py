@@ -26,8 +26,8 @@ def add_new_dam(location, name, owner, river, date_built):
 
     # Write to file in app_workspace/dams/{{uuid}}.json
     # Make dams dir if it doesn't exist
-    user_workspace = app.get_app_workspace()
-    dams_dir = os.path.join(user_workspace.path, 'dams')
+    app_workspace = app.get_app_workspace()
+    dams_dir = os.path.join(app_workspace.path, 'dams')
     if not os.path.exists(dams_dir):
         os.mkdir(dams_dir)
 
@@ -46,8 +46,8 @@ def get_all_dams():
     """
     # Write to file in app_workspace/dams/{{uuid}}.json
     # Make dams dir if it doesn't exist
-    user_workspace = app.get_app_workspace()
-    dams_dir = os.path.join(user_workspace.path, 'dams')
+    app_workspace = app.get_app_workspace()
+    dams_dir = os.path.join(app_workspace.path, 'dams')
     if not os.path.exists(dams_dir):
         os.mkdir(dams_dir)
 
