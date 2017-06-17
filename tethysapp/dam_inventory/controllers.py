@@ -47,7 +47,18 @@ def home(request):
     dams_layer = MVLayer(
         source='GeoJSON',
         options=dams_feature_collection,
-        legend_title='Dams'
+        legend_title='Dams',
+        layer_options={
+            'style': {
+                'image': {
+                    'circle': {
+                        'radius': 10,
+                        'fill': {'color':  '#d84e1f'},
+                        'stroke': {'color': '#ffffff', 'width': 1},
+                    }
+                }
+            }
+        }
     )
 
     # Define view centered on dam locations
@@ -59,7 +70,7 @@ def home(request):
     view_options = MVView(
         projection='EPSG:4326',
         center=view_center,
-        zoom=6,
+        zoom=4.5,
         maxZoom=18,
         minZoom=2
     )
