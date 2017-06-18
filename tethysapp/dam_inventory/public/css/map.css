@@ -1,5 +1,11 @@
 .popover-content {
-    width: 240px;
+    width: 400px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.popover {
+    max-width: none;
 }
 
 #inner-app-content {

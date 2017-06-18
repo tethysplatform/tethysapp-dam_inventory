@@ -27,35 +27,50 @@ $(function()
             // Get coordinates of the point to set position of the popup
             var coordinates = selected_feature.getGeometry().getCoordinates();
 
-            var popup_content = '<div class="dam-popup">' +
-                                    '<p><b>' + selected_feature.get('name') + '</b></p>' +
-                                    '<table class="table  table-condensed">' +
-                                        '<tr>' +
-                                            '<th>Owner:</th>' +
-                                            '<td>' + selected_feature.get('owner') + '</td>' +
-                                        '</tr>' +
-                                        '<tr>' +
-                                            '<th>River:</th>' +
-                                            '<td>' + selected_feature.get('river') + '</td>' +
-                                        '</tr>' +
-                                        '<tr>' +
-                                            '<th>Date Built:</th>' +
-                                            '<td>' + selected_feature.get('date_built') + '</td>' +
-                                        '</tr>' +
-                                    '</table>' +
-                                '</div>';
+            // Load hydrograph dynamically with AJAX
+            $.ajax({
+                url: '/apps/dam-inventory/hydrographs/' + selected_feature.get('id') + '/ajax/',
+                method: 'GET',
+                success: function(plot_html) {
+                    var popup_content = '<div class="dam-popup">' +
+                        '<p><b>' + selected_feature.get('name') + '</b></p>' +
+                        '<table class="table  table-condensed">' +
+                            '<tr>' +
+                                '<th>Owner:</th>' +
+                                '<td>' + selected_feature.get('owner') + '</td>' +
+                            '</tr>' +
+                            '<tr>' +
+                                '<th>River:</th>' +
+                                '<td>' + selected_feature.get('river') + '</td>' +
+                            '</tr>' +
+                            '<tr>' +
+                                '<th>Date Built:</th>' +
+                                '<td>' + selected_feature.get('date_built') + '</td>' +
+                            '</tr>' +
+                        '</table>' +
+                        plot_html +
+                    '</div>';
 
-            // Clean up last popup and reinitialize
-            $(popup_element).popover('destroy');
-            popup.setPosition(coordinates);
+                    // Clean up last popup and reinitialize
+                    $(popup_element).popover('destroy');
 
-            $(popup_element).popover({
-              'placement': 'top',
-              'animation': true,
-              'html': true,
-              'content': popup_content
+                    // Delay arbitrarily to wait for previous popover to
+                    // be deleted before showing new popover.
+                    setTimeout(function() {
+                        popup.setPosition(coordinates);
+
+                        $(popup_element).popover({
+                          'placement': 'top',
+                          'animation': true,
+                          'html': true,
+                          'content': popup_content
+                        });
+
+                        $(popup_element).popover('show');
+                    }, 500);
+                }
             });
-            $(popup_element).popover('show');
+
         } else {
             // remove pop up when selecting nothing on the map
             $(popup_element).popover('destroy');
