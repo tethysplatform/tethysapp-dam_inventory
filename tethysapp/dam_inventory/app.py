@@ -41,6 +41,11 @@ class DamInventory(TethysAppBase):
                 name='dams',
                 url='dam-inventory/dams',
                 controller='dam_inventory.controllers.list_dams'
+            ),
+            UrlMap(
+                name='assign_hydrograph',
+                url='dam-inventory/hydrographs/assign',
+                controller='dam_inventory.controllers.assign_hydrograph'
             )
         )
 

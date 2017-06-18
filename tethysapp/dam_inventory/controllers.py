@@ -5,7 +5,8 @@ from django.contrib.auth.decorators import login_required
 
 from tethys_sdk.gizmos import MapView, Button, TextInput, DatePicker, SelectInput, MVDraw, MVView, MVLayer
 from tethys_sdk.permissions import permission_required, has_permission
-from .model import add_new_dam, get_all_dams
+from .model import add_new_dam, get_all_dams, Dam, assign_hydrograph_to_dam
+from .app import DamInventory as app
 
 
 @login_required()
@@ -160,7 +161,19 @@ def add_dam(request):
             date_error = 'Date Built is required.'
 
         if not has_errors:
-            add_new_dam(location=location, name=name, owner=owner, river=river, date_built=date_built)
+            # Get value of max_dams custom setting
+            max_dams = app.get_custom_setting('max_dams')
+
+            # Query database for count of dams
+            Session = app.get_persistent_store_database('primary_db', as_sessionmaker=True)
+            session = Session()
+            num_dams = session.query(Dam).count()
+
+            # Only add the dam if we have not exceed max_dams
+            if num_dams < max_dams:
+                add_new_dam(location=location, name=name, owner=owner, river=river, date_built=date_built)
+            else:
+                messages.warning(request, 'Unable to add dam "{0}", because the inventory is full.'.format(name))
             return redirect(reverse('dam_inventory:home'))
 
         messages.error(request, "Please fix errors.")
@@ -263,3 +276,91 @@ def list_dams(request):
         'can_add_dams': has_permission(request, 'add_dams')
     }
     return render(request, 'dam_inventory/list_dams.html', context)
+
+
+@login_required()
+def assign_hydrograph(request):
+    """
+    Controller for the Add Hydrograph page.
+    """
+    # Get dams from database
+    Session = app.get_persistent_store_database('primary_db', as_sessionmaker=True)
+    session = Session()
+    all_dams = session.query(Dam).all()
+
+    # Defaults
+    dam_select_options = [(dam.name, dam.id) for dam in all_dams]
+    selected_dam = None
+    hydrograph_file = None
+
+    # Errors
+    dam_select_errors = ''
+    hydrograph_file_error = ''
+
+    # Case where the form has been submitted
+    if request.POST and 'add-button' in request.POST:
+        # Get Values
+        has_errors = False
+        selected_dam = request.POST.get('dam-select', None)
+
+        if not selected_dam:
+            has_errors = True
+            dam_select_errors = 'Dam is Required.'
+
+        # Get File
+        if request.FILES and 'hydrograph-file' in request.FILES:
+            # Get a list of the files
+            hydrograph_file = request.FILES.getlist('hydrograph-file')
+
+        if not hydrograph_file and len(hydrograph_file) > 0:
+            has_errors = True
+            hydrograph_file_error = 'Hydrograph File is Required.'
+
+        if not has_errors:
+            # Process file here
+            success = assign_hydrograph_to_dam(selected_dam, hydrograph_file[0])
+
+            # Provide feedback to user
+            if success:
+                messages.info(request, 'Successfully assigned hydrograph.')
+            else:
+                messages.info(request, 'Unable to assign hydrograph. Please try again.')
+            return redirect(reverse('dam_inventory:home'))
+
+        messages.error(request, "Please fix errors.")
+
+    dam_select_input = SelectInput(
+        display_text='Dam',
+        name='dam-select',
+        multiple=False,
+        options=dam_select_options,
+        initial=selected_dam,
+        error=dam_select_errors
+    )
+
+    add_button = Button(
+        display_text='Add',
+        name='add-button',
+        icon='glyphicon glyphicon-plus',
+        style='success',
+        attributes={'form': 'add-hydrograph-form'},
+        submit=True
+    )
+
+    cancel_button = Button(
+        display_text='Cancel',
+        name='cancel-button',
+        href=reverse('dam_inventory:home')
+    )
+
+    context = {
+        'dam_select_input': dam_select_input,
+        'hydrograph_file_error': hydrograph_file_error,
+        'add_button': add_button,
+        'cancel_button': cancel_button,
+        'can_add_dams': has_permission(request, 'add_dams')
+    }
+
+    session.close()
+
+    return render(request, 'dam_inventory/assign_hydrograph.html', context)
