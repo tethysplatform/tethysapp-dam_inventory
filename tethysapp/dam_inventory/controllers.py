@@ -2,10 +2,12 @@ from django.core.urlresolvers import reverse
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+import plotly.plotly as ply
+import plotly.graph_objs as go
 
-from tethys_sdk.gizmos import MapView, Button, TextInput, DatePicker, SelectInput, MVDraw, MVView, MVLayer
+from tethys_sdk.gizmos import MapView, Button, TextInput, DatePicker, SelectInput, MVDraw, MVView, MVLayer, PlotlyView
 from tethys_sdk.permissions import permission_required, has_permission
-from .model import add_new_dam, get_all_dams, Dam, assign_hydrograph_to_dam
+from .model import add_new_dam, get_all_dams, Dam, assign_hydrograph_to_dam, Hydrograph
 from .app import DamInventory as app
 
 
@@ -270,12 +272,21 @@ def list_dams(request):
     """
     Show all dams in a table view.
     """
-    dams = get_all_dams()
+    # Get connection/session to database
+    Session = app.get_persistent_store_database('primary_db', as_sessionmaker=True)
+    session = Session()
+
+    # Query for all dam records
+    dams = session.query(Dam).all()
+
     context = {
         'dams': dams,
         'can_add_dams': has_permission(request, 'add_dams')
     }
-    return render(request, 'dam_inventory/list_dams.html', context)
+
+    response = render(request, 'dam_inventory/list_dams.html', context)
+    session.close()
+    return response
 
 
 @login_required()
@@ -364,3 +375,49 @@ def assign_hydrograph(request):
     session.close()
 
     return render(request, 'dam_inventory/assign_hydrograph.html', context)
+
+
+@login_required()
+def hydrograph(request, id=None):
+    """
+    Controller for the Hydrograph Page.
+    """
+    # Get objects from database
+    Session = app.get_persistent_store_database('primary_db', as_sessionmaker=True)
+    session = Session()
+    hydrograph = session.query(Hydrograph).get(int(id))
+    dam = hydrograph.dam
+
+    time = []
+    flow = []
+
+    for hydro_point in hydrograph.points:
+        time.append(hydro_point.time)
+        flow.append(hydro_point.flow)
+
+    # Build up Plotly plot
+    hydrograph_go = go.Scatter(
+        x=time,
+        y=flow,
+        name='Hydrograph for {0}'.format(dam.name),
+        line={'color': '#0080ff', 'width': 4, 'shape': 'spline'},
+    )
+
+    data = [hydrograph_go]
+
+    layout = {
+        'title': 'Hydrograph for {0}'.format(dam.name),
+        'xaxis': {'title': 'Time (hr)'},
+        'yaxis': {'title': 'Flow (cfs)'},
+    }
+
+    figure = {'data': data, 'layout': layout}
+
+    hydrograph_plot = PlotlyView(figure)
+
+    context = {
+        'hydrograph_plot': hydrograph_plot,
+        'can_add_dams': has_permission(request, 'add_dams')
+    }
+    session.close()
+    return render(request, 'dam_inventory/hydrograph.html', context)
