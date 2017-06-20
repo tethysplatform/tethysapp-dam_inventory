@@ -17,7 +17,6 @@
   {% url 'dam_inventory:add_dam' as add_dam_url %}
   <li class="title">Navigation</li>
   <li class="{% if request.path == home_url %}active{% endif %}"><a href="{{ home_url }}">Home</a></li>
-  <li class="title">Actions</li>
   <li class="{% if request.path == add_dam_url %}active{% endif %}"><a href="{{ add_dam_url }}">Add Dam</a></li>
 {% endblock %}
 
