@@ -65,7 +65,3 @@ def get_all_dams():
             dams.append(dam_dict)
 
     return dams
-
-
-
-

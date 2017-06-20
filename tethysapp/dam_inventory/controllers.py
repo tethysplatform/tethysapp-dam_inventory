@@ -1,9 +1,8 @@
-from django.core.urlresolvers import reverse
-from django.shortcuts import render, redirect
+from django.shortcuts import render, reverse, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from tethys_sdk.gizmos import MapView, Button, TextInput, DatePicker, SelectInput, DataTableView, MVDraw, MVView, MVLayer
 
-from tethys_sdk.gizmos import MapView, Button, TextInput, DatePicker, SelectInput, MVDraw, MVView, MVLayer
 from .model import add_new_dam, get_all_dams
 
 
@@ -18,6 +17,7 @@ def home(request):
     lat_list = []
     lng_list = []
 
+    # Define a GeoJSON Features
     for dam in dams:
         dam_location = dam.pop('location')
         lat_list.append(dam_location['coordinates'][1])
@@ -28,11 +28,12 @@ def home(request):
             'geometry': {
                 'type': dam_location['type'],
                 'coordinates': dam_location['coordinates'],
-            },
+            }
         }
 
         features.append(dam_feature)
 
+    # Define GeoJSON FeatureCollection
     dams_feature_collection = {
         'type': 'FeatureCollection',
         'crs': {
@@ -44,6 +45,7 @@ def home(request):
         'features': features
     }
 
+    # Create a Map View Layer
     dams_layer = MVLayer(
         source='GeoJSON',
         options=dams_feature_collection,
@@ -90,7 +92,7 @@ def home(request):
         style='success',
         href=reverse('dam_inventory:add_dam')
     )
-    
+
     context = {
         'dam_inventory_map': dam_inventory_map,
         'add_dam_button': add_dam_button
@@ -247,5 +249,26 @@ def list_dams(request):
     Show all dams in a table view.
     """
     dams = get_all_dams()
-    context = {'dams': dams}
+    table_rows = []
+
+    for dam in dams:
+        table_rows.append(
+            (
+                dam['name'], dam['owner'],
+                dam['river'], dam['date_built']
+            )
+        )
+
+    dams_table = DataTableView(
+        column_names=('Name', 'Owner', 'River', 'Date Built'),
+        rows=table_rows,
+        searching=False,
+        orderClasses=False,
+        lengthMenu=[ [10, 25, 50, -1], [10, 25, 50, "All"] ],
+    )
+
+    context = {
+        'dams_table': dams_table
+    }
+
     return render(request, 'dam_inventory/list_dams.html', context)
