@@ -2,7 +2,7 @@
 
 {% load staticfiles %}
 
-{% block title %}- {{ tethys_app.name }}{% endblock %}
+{% block title %}{{ tethys_app.name }}{% endblock %}
 
 {% block app_icon %}
   {# The path you provided in your app.py is accessible through the tethys_app.icon context variable #}
@@ -13,10 +13,11 @@
 {% block app_title %}{{ tethys_app.name }}{% endblock %}
 
 {% block app_navigation_items %}
-  <li class="title">App Navigation</li>
   {% url 'dam_inventory:home' as home_url %}
   {% url 'dam_inventory:add_dam' as add_dam_url %}
+  <li class="title">Navigation</li>
   <li class="{% if request.path == home_url %}active{% endif %}"><a href="{{ home_url }}">Home</a></li>
+  <li class="title">Actions</li>
   <li class="{% if request.path == add_dam_url %}active{% endif %}"><a href="{{ add_dam_url }}">Add Dam</a></li>
 {% endblock %}
 

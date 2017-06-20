@@ -9,11 +9,11 @@ class DamInventory(TethysAppBase):
 
     name = 'Dam Inventory'
     index = 'dam_inventory:home'
-    icon = 'dam_inventory/images/icon.gif'
+    icon = 'dam_inventory/images/dam_icon.png'
     package = 'dam_inventory'
     root_url = 'dam-inventory'
-    color = '#e67e22'
-    description = ''
+    color = '#01AEBF'
+    description = 'Place a brief description of your app here.'
     tags = ''
     enable_feedback = False
     feedback_emails = []
@@ -34,7 +34,7 @@ class DamInventory(TethysAppBase):
                 name='add_dam',
                 url='dam-inventory/dams/add',
                 controller='dam_inventory.controllers.add_dam'
-            )
+            ),
         )
 
         return url_maps
@@ -48,7 +48,7 @@ class DamInventory(TethysAppBase):
                 name='max_dams',
                 type=CustomSetting.TYPE_INTEGER,
                 description='Maximum number of dams that can be created in the app.',
-                required=True
+                required=False
             ),
         )
         return custom_settings

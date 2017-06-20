@@ -1,5 +1,4 @@
-from django.core.urlresolvers import reverse
-from django.shortcuts import render
+from django.shortcuts import render, reverse
 from django.contrib.auth.decorators import login_required
 from tethys_sdk.gizmos import MapView, Button
 
@@ -25,7 +24,7 @@ def home(request):
         style='success',
         href=reverse('dam_inventory:add_dam')
     )
-    
+
     context = {
         'dam_inventory_map': dam_inventory_map,
         'add_dam_button': add_dam_button
@@ -43,7 +42,7 @@ def add_dam(request):
         display_text='Add',
         name='add-button',
         icon='glyphicon glyphicon-plus',
-        style='success',
+        style='success'
     )
 
     cancel_button = Button(
