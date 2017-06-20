@@ -1,33 +1,7 @@
 {% extends "dam_inventory/base.html" %}
+{% load tethys_gizmos %}
 
 {% block app_content %}
   <h1>Dams</h1>
-  <table class="table table-hover">
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Owner</th>
-        <th>River</th>
-        <th>Date Built</th>
-        <th>Hydrograph</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for dam in dams %}
-        <tr>
-          <td>{{ dam.name }}</td>
-          <td>{{ dam.owner }}</td>
-          <td>{{ dam.river }}</td>
-          <td>{{ dam.date_built }}</td>
-          <td>
-            {% if dam.hydrograph %}
-              <a href="{% url 'dam_inventory:hydrograph' dam.hydrograph.id %}">Hydrograph</a>
-            {% else %}
-              <a href="{% url 'dam_inventory:assign_hydrograph' %}">Assign</a>
-            {% endif %}
-          </td>
-        </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+  {% gizmo dams_table %}
 {% endblock %}

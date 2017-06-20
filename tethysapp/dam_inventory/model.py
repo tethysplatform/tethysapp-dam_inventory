@@ -8,6 +8,7 @@ from .app import DamInventory as app
 Base = declarative_base()
 
 
+# SQLAlchemy ORM definition for the dams table
 class Dam(Base):
     """
     SQLAlchemy Dam DB Model
@@ -105,6 +106,45 @@ def get_all_dams():
     return dams
 
 
+def init_primary_db(engine, first_time):
+    """
+    Initializer for the primary database.
+    """
+    # Create all the tables
+    Base.metadata.create_all(engine)
+
+    # Add data
+    if first_time:
+        # Make session
+        Session = sessionmaker(bind=engine)
+        session = Session()
+
+        # Initialize database with two dams
+        dam1 = Dam(
+            latitude=40.406624,
+            longitude=-111.529133,
+            name="Deer Creek",
+            owner="Reclamation",
+            river="Provo River",
+            date_built="April 12, 1993"
+        )
+
+        dam2 = Dam(
+            latitude=40.598168,
+            longitude=-111.424055,
+            name="Jordanelle",
+            owner="Reclamation",
+            river="Provo River",
+            date_built="1941"
+        )
+
+        # Add the dams to the session, commit, and close
+        session.add(dam1)
+        session.add(dam2)
+        session.commit()
+        session.close()
+
+
 def assign_hydrograph_to_dam(dam_id, hydrograph_file):
     """
     Parse hydrograph file and add to database, assigning to appropriate dam.
@@ -156,7 +196,3 @@ def assign_hydrograph_to_dam(dam_id, hydrograph_file):
         return False
 
     return True
-
-
-
-

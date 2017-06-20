@@ -1,13 +1,12 @@
+from django.shortcuts import render, reverse, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.core.urlresolvers import reverse
-from django.shortcuts import render, redirect
-from tethys_sdk.gizmos import MapView, Button, TextInput, DatePicker, SelectInput, MVDraw, MVView, MVLayer
+from tethys_sdk.gizmos import MapView, Button, TextInput, DatePicker, SelectInput, DataTableView, MVDraw, MVView, MVLayer
 from tethys_sdk.permissions import permission_required, has_permission
 
-from .helpers import create_hydrograph
-from .app import DamInventory as app
 from .model import add_new_dam, get_all_dams, Dam, assign_hydrograph_to_dam
+from .app import DamInventory as app
+from .helpers import create_hydrograph
 
 
 @login_required()
@@ -40,9 +39,9 @@ def home(request):
                 'date_built': dam.date_built
             }
         }
-
         features.append(dam_feature)
 
+    # Define GeoJSON FeatureCollection
     dams_feature_collection = {
         'type': 'FeatureCollection',
         'crs': {
@@ -54,6 +53,7 @@ def home(request):
         'features': features
     }
 
+    # Create a Map View Layer
     dams_layer = MVLayer(
         source='GeoJSON',
         options=dams_feature_collection,
@@ -101,7 +101,7 @@ def home(request):
         style='success',
         href=reverse('dam_inventory:add_dam')
     )
-    
+
     context = {
         'dam_inventory_map': dam_inventory_map,
         'add_dam_button': add_dam_button,
@@ -175,6 +175,7 @@ def add_dam(request):
                 add_new_dam(location=location, name=name, owner=owner, river=river, date_built=date_built)
             else:
                 messages.warning(request, 'Unable to add dam "{0}", because the inventory is full.'.format(name))
+            
             return redirect(reverse('dam_inventory:home'))
 
         messages.error(request, "Please fix errors.")
@@ -271,21 +272,31 @@ def list_dams(request):
     """
     Show all dams in a table view.
     """
-    # Get connection/session to database
-    Session = app.get_persistent_store_database('primary_db', as_sessionmaker=True)
-    session = Session()
+    dams = get_all_dams()
+    table_rows = []
 
-    # Query for all dam records
-    dams = session.query(Dam).all()
+    for dam in dams:
+        table_rows.append(
+            (
+                dam.name, dam.owner,
+                dam.river, dam.date_built
+            )
+        )
+
+    dams_table = DataTableView(
+        column_names=('Name', 'Owner', 'River', 'Date Built', 'Hydrograph'),
+        rows=table_rows,
+        searching=False,
+        orderClasses=False,
+        lengthMenu=[ [10, 25, 50, -1], [10, 25, 50, "All"] ],
+    )
 
     context = {
-        'dams': dams,
+        'dams_table': dams_table,
         'can_add_dams': has_permission(request, 'add_dams')
     }
 
-    response = render(request, 'dam_inventory/list_dams.html', context)
-    session.close()
-    return response
+    return render(request, 'dam_inventory/list_dams.html', context)
 
 
 @login_required()
@@ -377,7 +388,7 @@ def assign_hydrograph(request):
 
 
 @login_required()
-def hydrograph(request, hydrograph_id=None):
+def hydrograph(request, hydrograph_id):
     """
     Controller for the Hydrograph Page.
     """
@@ -385,6 +396,7 @@ def hydrograph(request, hydrograph_id=None):
 
     context = {
         'hydrograph_plot': hydrograph_plot,
+        'can_add_dams': has_permission(request, 'add_dams')
     }
     return render(request, 'dam_inventory/hydrograph.html', context)
 
@@ -410,5 +422,4 @@ def hydrograph_ajax(request, dam_id):
 
     session.close()
     return render(request, 'dam_inventory/hydrograph_ajax.html', context)
-
 
