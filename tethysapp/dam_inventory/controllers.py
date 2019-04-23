@@ -1,10 +1,12 @@
+import os
 from django.shortcuts import render, reverse, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.utils.html import format_html
 from tethys_sdk.gizmos import MapView, Button, TextInput, DatePicker, SelectInput, DataTableView, MVDraw, MVView, MVLayer
 from tethys_sdk.permissions import permission_required, has_permission
-
+from tethys_sdk.workspaces import user_workspace
+from tethys_sdk.quotas import enforce_quota
 from .model import add_new_dam, get_all_dams, Dam, assign_hydrograph_to_dam, get_hydrograph
 from .app import DamInventory as app
 from .helpers import create_hydrograph
@@ -112,6 +114,7 @@ def home(request):
     return render(request, 'dam_inventory/home.html', context)
 
 
+@enforce_quota('user_dam_quota')
 @permission_required('add_dams')
 def add_dam(request):
     """
@@ -171,12 +174,15 @@ def add_dam(request):
             session = Session()
             num_dams = session.query(Dam).count()
 
+            user_id = request.user.id
+
             # Only add the dam if we have not exceed max_dams
             if not max_dams or num_dams < max_dams:
-                add_new_dam(location=location, name=name, owner=owner, river=river, date_built=date_built)
+                add_new_dam(location=location, name=name, owner=owner, river=river, date_built=date_built,
+                            user_id=user_id)
             else:
                 messages.warning(request, 'Unable to add dam "{0}", because the inventory is full.'.format(name))
-            
+
             return redirect(reverse('dam_inventory:home'))
 
         messages.error(request, "Please fix errors.")
@@ -285,20 +291,27 @@ def list_dams(request):
             dam_hydrograph = format_html('<a class="btn btn-primary disabled" title="No hydrograph assigned" '
                                          'style="pointer-events: auto;">Hydrograph Plot</a>')
 
+        if dam.user_id == request.user.id:
+            url = reverse('dam_inventory:delete_dam', kwargs={'dam_id': dam.id})
+            dam_delete = format_html('<a class="btn btn-danger" href="{}">Delete Dam</a>'.format(url))
+        else:
+            dam_delete = format_html('<a class="btn btn-danger disabled" title="You are not the dam creator" '
+                                     'style="pointer-events: auto;">Delete Dam</a>')
+
         table_rows.append(
             (
                 dam.name, dam.owner,
                 dam.river, dam.date_built,
-                dam_hydrograph
+                dam_hydrograph, dam_delete
             )
         )
 
     dams_table = DataTableView(
-        column_names=('Name', 'Owner', 'River', 'Date Built', 'Hydrograph'),
+        column_names=('Name', 'Owner', 'River', 'Date Built', 'Hydrograph', 'Manage'),
         rows=table_rows,
         searching=False,
         orderClasses=False,
-        lengthMenu=[ [10, 25, 50, -1], [10, 25, 50, "All"] ],
+        lengthMenu=[[10, 25, 50, -1], [10, 25, 50, "All"]],
     )
 
     context = {
@@ -309,18 +322,19 @@ def list_dams(request):
     return render(request, 'dam_inventory/list_dams.html', context)
 
 
+@user_workspace()
 @login_required()
-def assign_hydrograph(request):
+def assign_hydrograph(request, user_workspace):
     """
     Controller for the Add Hydrograph page.
     """
     # Get dams from database
     Session = app.get_persistent_store_database('primary_db', as_sessionmaker=True)
     session = Session()
-    all_dams = session.query(Dam).all()
+    dams = session.query(Dam).filter(Dam.user_id == request.user.id)
 
     # Defaults
-    dam_select_options = [(dam.name, dam.id) for dam in all_dams]
+    dam_select_options = [(dam.name, dam.id) for dam in dams]
     selected_dam = None
     hydrograph_file = None
 
@@ -349,7 +363,14 @@ def assign_hydrograph(request):
 
         if not has_errors:
             # Process file here
-            success = assign_hydrograph_to_dam(selected_dam, hydrograph_file[0])
+            hydrograph_file = hydrograph_file[0]
+            success = assign_hydrograph_to_dam(selected_dam, hydrograph_file)
+
+            # Write csv to user_workspace to test workspace quota functionality
+            with open(os.path.join(user_workspace.path, hydrograph_file.name), 'wb+') as destination:
+                for chunk in hydrograph_file.chunks():
+                    destination.write(chunk)
+                destination.close()
 
             # Provide feedback to user
             if success:
@@ -432,3 +453,22 @@ def hydrograph_ajax(request, dam_id):
 
     session.close()
     return render(request, 'dam_inventory/hydrograph_ajax.html', context)
+
+
+@login_required()
+def delete_dam(request, dam_id):
+    """
+    Controller for the deleting a dam.
+    """
+    Session = app.get_persistent_store_database('primary_db', as_sessionmaker=True)
+    session = Session()
+
+    # Delete dam object
+    dam = session.query(Dam).get(int(dam_id))
+    session.delete(dam)
+    session.commit()
+    session.close()
+
+    messages.success(request, "{} Dam has been successfully deleted.".format(dam.name))
+
+    return redirect(reverse('dam_inventory:dams'))

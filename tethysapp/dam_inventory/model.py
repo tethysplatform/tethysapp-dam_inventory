@@ -23,9 +23,10 @@ class Dam(Base):
     owner = Column(String)
     river = Column(String)
     date_built = Column(String)
+    user_id = Column(Integer)
 
     # Relationships
-    hydrograph = relationship('Hydrograph', back_populates='dam', uselist=False)
+    hydrograph = relationship('Hydrograph', cascade="all,delete", back_populates='dam', uselist=False)
 
 
 class Hydrograph(Base):
@@ -40,7 +41,7 @@ class Hydrograph(Base):
 
     # Relationships
     dam = relationship('Dam', back_populates='hydrograph')
-    points = relationship('HydrographPoint', back_populates='hydrograph')
+    points = relationship('HydrographPoint', cascade="all,delete", back_populates='hydrograph')
 
 
 class HydrographPoint(Base):
@@ -59,7 +60,7 @@ class HydrographPoint(Base):
     hydrograph = relationship('Hydrograph', back_populates='points')
 
 
-def add_new_dam(location, name, owner, river, date_built):
+def add_new_dam(location, name, owner, river, date_built, user_id):
     """
     Persist new dam.
     """
@@ -76,7 +77,8 @@ def add_new_dam(location, name, owner, river, date_built):
         name=name,
         owner=owner,
         river=river,
-        date_built=date_built
+        date_built=date_built,
+        user_id=user_id,
     )
 
     # Get connection/session to database
@@ -91,9 +93,41 @@ def add_new_dam(location, name, owner, river, date_built):
     session.close()
 
 
+def get_hydrograph(dam_id):
+    """
+    Get hydrograph id from dam id.
+    """
+    Session = app.get_persistent_store_database('primary_db', as_sessionmaker=True)
+    session = Session()
+
+    # Query if hydrograph exists for dam
+    hydrograph = session.query(Hydrograph).filter_by(dam_id=dam_id).first()
+    session.close()
+
+    if hydrograph:
+        return hydrograph.id
+    else:
+        return None
+
+
 def get_all_dams():
     """
     Get all persisted dams.
+    """
+    # Get connection/session to database
+    Session = app.get_persistent_store_database('primary_db', as_sessionmaker=True)
+    session = Session()
+
+    # Query for all dam records
+    dams = session.query(Dam).all()
+    session.close()
+
+    return dams
+
+
+def get_all_hydrographs():
+    """
+    Get all persisted hydrographs.
     """
     # Get connection/session to database
     Session = app.get_persistent_store_database('primary_db', as_sessionmaker=True)
@@ -126,7 +160,8 @@ def init_primary_db(engine, first_time):
             name="Deer Creek",
             owner="Reclamation",
             river="Provo River",
-            date_built="April 12, 1993"
+            date_built="April 12, 1993",
+            user_id=-1,
         )
 
         dam2 = Dam(
@@ -135,7 +170,8 @@ def init_primary_db(engine, first_time):
             name="Jordanelle",
             owner="Reclamation",
             river="Provo River",
-            date_built="1941"
+            date_built="1941",
+            user_id=-1,
         )
 
         # Add the dams to the session, commit, and close
