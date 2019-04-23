@@ -1,10 +1,11 @@
 from django.shortcuts import render, reverse, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.utils.html import format_html
 from tethys_sdk.gizmos import MapView, Button, TextInput, DatePicker, SelectInput, DataTableView, MVDraw, MVView, MVLayer
 from tethys_sdk.permissions import permission_required, has_permission
 
-from .model import add_new_dam, get_all_dams, Dam, assign_hydrograph_to_dam
+from .model import add_new_dam, get_all_dams, Dam, assign_hydrograph_to_dam, get_hydrograph
 from .app import DamInventory as app
 from .helpers import create_hydrograph
 
@@ -171,7 +172,7 @@ def add_dam(request):
             num_dams = session.query(Dam).count()
 
             # Only add the dam if we have not exceed max_dams
-            if num_dams < max_dams:
+            if not max_dams or num_dams < max_dams:
                 add_new_dam(location=location, name=name, owner=owner, river=river, date_built=date_built)
             else:
                 messages.warning(request, 'Unable to add dam "{0}", because the inventory is full.'.format(name))
@@ -276,10 +277,19 @@ def list_dams(request):
     table_rows = []
 
     for dam in dams:
+        hydrograph_id = get_hydrograph(dam.id)
+        if hydrograph_id:
+            url = reverse('dam_inventory:hydrograph', kwargs={'hydrograph_id': hydrograph_id})
+            dam_hydrograph = format_html('<a class="btn btn-primary" href="{}">Hydrograph Plot</a>'.format(url))
+        else:
+            dam_hydrograph = format_html('<a class="btn btn-primary disabled" title="No hydrograph assigned" '
+                                         'style="pointer-events: auto;">Hydrograph Plot</a>')
+
         table_rows.append(
             (
                 dam.name, dam.owner,
-                dam.river, dam.date_built
+                dam.river, dam.date_built,
+                dam_hydrograph
             )
         )
 
@@ -422,4 +432,3 @@ def hydrograph_ajax(request, dam_id):
 
     session.close()
     return render(request, 'dam_inventory/hydrograph_ajax.html', context)
-
