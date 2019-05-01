@@ -295,7 +295,7 @@ def list_dams(request):
             url = reverse('dam_inventory:delete_dam', kwargs={'dam_id': dam.id})
             dam_delete = format_html('<a class="btn btn-danger" href="{}">Delete Dam</a>'.format(url))
         else:
-            dam_delete = format_html('<a class="btn btn-danger disabled" title="You are not the dam creator" '
+            dam_delete = format_html('<a class="btn btn-danger disabled" title="You are not the creator of the dam" '
                                      'style="pointer-events: auto;">Delete Dam</a>')
 
         table_rows.append(
@@ -366,8 +366,14 @@ def assign_hydrograph(request, user_workspace):
             hydrograph_file = hydrograph_file[0]
             success = assign_hydrograph_to_dam(selected_dam, hydrograph_file)
 
+            # Remove csv related to dam if exists
+            for file in os.listdir(user_workspace.path):
+                if file.startswith("{}_".format(selected_dam)):
+                    os.remove(os.path.join(user_workspace.path, file))
+
             # Write csv to user_workspace to test workspace quota functionality
-            with open(os.path.join(user_workspace.path, hydrograph_file.name), 'wb+') as destination:
+            full_filename = "{}_{}".format(selected_dam, hydrograph_file.name)
+            with open(os.path.join(user_workspace.path, full_filename), 'wb+') as destination:
                 for chunk in hydrograph_file.chunks():
                     destination.write(chunk)
                 destination.close()
@@ -455,13 +461,19 @@ def hydrograph_ajax(request, dam_id):
     return render(request, 'dam_inventory/hydrograph_ajax.html', context)
 
 
+@user_workspace()
 @login_required()
-def delete_dam(request, dam_id):
+def delete_dam(request, user_workspace, dam_id):
     """
     Controller for the deleting a dam.
     """
     Session = app.get_persistent_store_database('primary_db', as_sessionmaker=True)
     session = Session()
+
+    # Delete hydrograph file related to dam if exists
+    for file in os.listdir(user_workspace.path):
+        if file.startswith("{}_".format(int(dam_id))):
+            os.remove(os.path.join(user_workspace.path, file))
 
     # Delete dam object
     dam = session.query(Dam).get(int(dam_id))

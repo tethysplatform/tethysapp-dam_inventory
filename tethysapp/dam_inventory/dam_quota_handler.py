@@ -37,4 +37,6 @@ class DamQuotaHandler(ResourceQuotaHandler):
         session = Session()
         current_use = session.query(Dam).filter(Dam.user_id == self.entity.id).count()
 
+        session.close()
+
         return current_use
