@@ -57,6 +57,12 @@ class DamInventory(TethysAppBase):
                 url='dam-inventory/hydrographs/{dam_id}/ajax',
                 controller='dam_inventory.controllers.hydrograph_ajax'
             ),
+            UrlMap(
+                name='dam_notification',
+                url='dam-inventory/dams/notifications',
+                controller='dam_inventory.controllers.notificationsConsumer',
+                protocol='websocket'
+            ),
         )
 
         return url_maps

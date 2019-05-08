@@ -2,12 +2,18 @@ from django.shortcuts import render, reverse, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
 from django.utils.html import format_html
-from tethys_sdk.gizmos import MapView, Button, TextInput, DatePicker, SelectInput, DataTableView, MVDraw, MVView, MVLayer
+from tethys_sdk.gizmos import (MapView, Button, TextInput, DatePicker, SelectInput, DataTableView, MVDraw, MVView,
+                               MVLayer, MessageBox)
 from tethys_sdk.permissions import has_permission
 
 from .model import add_new_dam, get_all_dams, Dam, assign_hydrograph_to_dam, get_hydrograph
 from .app import DamInventory as app
 from .helpers import create_hydrograph
+
+from channels.generic.websocket import AsyncWebsocketConsumer
+import json
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 
 @login_required()
@@ -103,8 +109,15 @@ def home(request):
         href=reverse('dam_inventory:add_dam')
     )
 
+    message_box = MessageBox(name='notification',
+                             title='',
+                             dismiss_button='Nevermind',
+                             affirmative_button='Refresh',
+                             affirmative_attributes='onClick=window.location.href=window.location.href;')
+
     context = {
         'dam_inventory_map': dam_inventory_map,
+        'message_box': message_box,
         'add_dam_button': add_dam_button,
         'can_add_dams': has_permission(request, 'add_dams')
     }
@@ -176,7 +189,18 @@ def add_dam(request):
                 add_new_dam(location=location, name=name, owner=owner, river=river, date_built=date_built)
             else:
                 messages.warning(request, 'Unable to add dam "{0}", because the inventory is full.'.format(name))
-            
+
+            new_num_dams = session.query(Dam).count()
+
+            if new_num_dams > num_dams:
+                channel_layer = get_channel_layer()
+                async_to_sync(channel_layer.group_send)(
+                    "notifications", {
+                        "type": "dam_notifications",
+                        "message": "New Dam"
+                    }
+                )
+
             return redirect(reverse('dam_inventory:home'))
 
         messages.error(request, "Please fix errors.")
@@ -432,3 +456,19 @@ def hydrograph_ajax(request, dam_id):
 
     session.close()
     return render(request, 'dam_inventory/hydrograph_ajax.html', context)
+
+
+class notificationsConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        await self.accept()
+        await self.channel_layer.group_add("notifications", self.channel_name)
+        print(f"Added {self.channel_name} channel to notifications")
+
+    async def disconnect(self, close_code):
+        await self.channel_layer.group_discard("notifications", self.channel_name)
+        print(f"Removed {self.channel_name} channel from notifications")
+
+    async def dam_notifications(self, event):
+        message = event['message']
+        await self.send(text_data=json.dumps({'message': message}))
+        print(f"Got message {event} at {self.channel_name}")
