@@ -10,6 +10,25 @@
   <div id="popup"></div>
 {% endblock %}
 
+{% block after_app_content %}
+{% gizmo message_box %}
+  <script>
+    var notificationWS = new WebSocket('ws://' + window.location.host + '/ws/dam-inventory/dams/notifications/');
+    var nDiv = $("#notification");
+    var nTitle = $("#notificationLabel");
+    var nContent = $('#notification .lead');
+
+    notificationWS.onmessage = function (e) {
+      var data = JSON.parse(e.data);
+      if (data["message"] = "New Dam") {
+        nTitle.html('Dam Notification');
+        nContent.html('A new dam has been added. Refresh this page to load it.');
+        nDiv.modal();
+      }
+    };
+  </script>
+{% endblock %}
+
 {% block app_actions %}
   {% if can_add_dams %}
     {% gizmo add_dam_button %}
