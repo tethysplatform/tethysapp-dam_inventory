@@ -1,0 +1,46 @@
+{% extends "dam_inventory/base.html" %}
+{% load tethys_gizmos staticfiles %}
+
+{% block import_gizmos %}
+  {% import_gizmo_dependency plotly_view %}
+{% endblock %}
+
+{% block app_content %}
+  {% gizmo dam_inventory_map %}
+  <div id="popup"></div>
+{% endblock %}
+
+{% block after_app_content %}
+{% gizmo message_box %}
+  <script>
+    var notification_ws = new WebSocket('ws://' + window.location.host + '/ws/dam-inventory/dams/notifications/');
+    var n_div = $("#notification");
+    var n_title = $("#notificationLabel");
+    var n_content = $('#notification .lead');
+
+    notification_ws.onmessage = function (e) {
+      var data = JSON.parse(e.data);
+      if (data["message"] = "New Dam") {
+        n_title.html('Dam Notification');
+        n_content.html('A new dam has been added. Refresh this page to load it.');
+        n_div.modal();
+      }
+    };
+  </script>
+{% endblock %}
+
+{% block app_actions %}
+  {% if can_add_dams %}
+    {% gizmo add_dam_button %}
+  {% endif %}
+{% endblock %}
+
+{% block styles %}
+    {{ block.super }}
+    <link href="{% static 'dam_inventory/css/map.css' %}" rel="stylesheet"/>
+{% endblock %}
+
+{% block scripts %}
+  {{ block.super }}
+  <script src="{% static 'dam_inventory/js/map.js' %}" type="text/javascript"></script>
+{% endblock %}
