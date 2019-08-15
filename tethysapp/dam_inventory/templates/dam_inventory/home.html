@@ -13,7 +13,7 @@
 {% block after_app_content %}
 {% gizmo message_box %}
   <script>
-    var notification_ws = new WebSocket('ws://' + window.location.host + '/ws/dam-inventory/dams/notifications/');
+    var notification_ws = new WebSocket('ws://' + window.location.host + '/dam-inventory/dams/notifications/ws/');
     var n_div = $("#notification");
     var n_title = $("#notificationLabel");
     var n_content = $('#notification .lead');
