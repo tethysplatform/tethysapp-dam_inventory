@@ -325,7 +325,7 @@ def list_dams(request):
     return render(request, 'dam_inventory/list_dams.html', context)
 
 
-@user_workspace()
+@user_workspace
 @login_required()
 def assign_hydrograph(request, user_workspace):
     """
@@ -464,7 +464,7 @@ def hydrograph_ajax(request, dam_id):
     return render(request, 'dam_inventory/hydrograph_ajax.html', context)
 
 
-@user_workspace()
+@user_workspace
 @login_required()
 def delete_dam(request, user_workspace, dam_id):
     """
