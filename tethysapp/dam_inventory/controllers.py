@@ -1,5 +1,5 @@
 from django.shortcuts import render, reverse
-from django.contrib.auth.decorators import login_required
+from tethys_sdk.permissions import login_required
 from tethys_sdk.gizmos import MapView, Button
 
 
