@@ -11,12 +11,11 @@ class DamInventory(TethysAppBase):
     icon = 'dam_inventory/images/icon.gif'
     package = 'dam_inventory'
     root_url = 'dam-inventory'
-    color = '#e67e22'
+    color = '#c0392b'
     description = ''
     tags = ''
     enable_feedback = False
     feedback_emails = []
-
 
     def url_maps(self):
         """
@@ -24,13 +23,12 @@ class DamInventory(TethysAppBase):
         """
         UrlMap = url_map_maker(self.root_url)
 
-        url_maps = (UrlMap(name='home',
-                           url='dam-inventory',
-                           controller='dam_inventory.controllers.home'),
-                    # This is an example UrlMap for a REST API endpoint
-                    # UrlMap(name='api_get_data',
-                    #        url='dam-inventory/api/get_data',
-                    #        controller='dam_inventory.api.get_data'),
+        url_maps = (
+            UrlMap(
+                name='home',
+                url='dam-inventory',
+                controller='dam_inventory.controllers.home'
+            ),
         )
 
         return url_maps
