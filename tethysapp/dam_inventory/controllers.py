@@ -1,11 +1,12 @@
-from django.shortcuts import render, reverse, redirect
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
 from django.utils.html import format_html
-from tethys_sdk.gizmos import MapView, Button, TextInput, DatePicker, SelectInput, DataTableView, MVDraw, MVView, MVLayer
+from django.contrib import messages
+from django.shortcuts import render, reverse, redirect
+from tethys_sdk.permissions import login_required
+from tethys_sdk.gizmos import (Button, MapView, TextInput, DatePicker, 
+                               SelectInput, DataTableView, MVDraw, MVView,
+                               MVLayer)
 from tethys_sdk.permissions import permission_required, has_permission
-
-from .model import add_new_dam, get_all_dams, Dam, assign_hydrograph_to_dam, get_hydrograph
+from .model import Dam, add_new_dam, get_all_dams, assign_hydrograph_to_dam, get_hydrograph
 from .app import DamInventory as app
 from .helpers import create_hydrograph
 
@@ -121,34 +122,30 @@ def add_dam(request):
     Controller for the Add Dam page.
     """
     # Default Values
-    location = ''
     name = ''
     owner = 'Reclamation'
     river = ''
     date_built = ''
+    location = ''
 
     # Errors
-    location_error = ''
     name_error = ''
     owner_error = ''
     river_error = ''
     date_error = ''
+    location_error = ''
 
     # Handle form submission
     if request.POST and 'add-button' in request.POST:
         # Get values
         has_errors = False
-        location = request.POST.get('geometry', None)
         name = request.POST.get('name', None)
         owner = request.POST.get('owner', None)
         river = request.POST.get('river', None)
         date_built = request.POST.get('date-built', None)
+        location = request.POST.get('geometry', None)
 
         # Validate
-        if not location:
-            has_errors = True
-            location_error = 'Location is required.'
-
         if not name:
             has_errors = True
             name_error = 'Name is required.'
@@ -165,6 +162,10 @@ def add_dam(request):
             has_errors = True
             date_error = 'Date Built is required.'
 
+        if not location:
+            has_errors = True
+            location_error = 'Location is required.'
+
         if not has_errors:
             # Get value of max_dams custom setting
             max_dams = app.get_custom_setting('max_dams')
@@ -174,7 +175,7 @@ def add_dam(request):
             session = Session()
             num_dams = session.query(Dam).count()
 
-            # Only add the dam if we have not exceed max_dams
+            # Only add the dam if custom setting doesn't exist or we have not exceed max_dams
             if not max_dams or num_dams < max_dams:
                 add_new_dam(location=location, name=name, owner=owner, river=river, date_built=date_built)
             else:
@@ -185,27 +186,6 @@ def add_dam(request):
         messages.error(request, "Please fix errors.")
 
     # Define form gizmos
-    initial_view = MVView(
-        projection='EPSG:4326',
-        center=[-98.6, 39.8],
-        zoom=3.5
-    )
-
-    drawing_options = MVDraw(
-        controls=['Modify', 'Delete', 'Move', 'Point'],
-        initial='Point',
-        output_format='GeoJSON',
-        point_color='#FF0000'
-    )
-
-    location_input = MapView(
-        height='300px',
-        width='100%',
-        basemap='OpenStreetMap',
-        draw=drawing_options,
-        view=initial_view
-    )
-
     name_input = TextInput(
         display_text='Name',
         name='name',
@@ -241,6 +221,27 @@ def add_dam(request):
         error=date_error
     )
 
+    initial_view = MVView(
+        projection='EPSG:4326',
+        center=[-98.6, 39.8],
+        zoom=3.5
+    )
+
+    drawing_options = MVDraw(
+        controls=['Modify', 'Delete', 'Move', 'Point'],
+        initial='Point',
+        output_format='GeoJSON',
+        point_color='#FF0000'
+    )
+
+    location_input = MapView(
+        height='300px',
+        width='100%',
+        basemap='OpenStreetMap',
+        draw=drawing_options,
+        view=initial_view
+    )
+
     add_button = Button(
         display_text='Add',
         name='add-button',
@@ -257,12 +258,12 @@ def add_dam(request):
     )
 
     context = {
-        'location_input': location_input,
-        'location_error': location_error,
         'name_input': name_input,
         'owner_input': owner_input,
         'river_input': river_input,
         'date_built_input': date_built,
+        'location_input': location_input,
+        'location_error': location_error,
         'add_button': add_button,
         'cancel_button': cancel_button,
         'can_add_dams': has_permission(request, 'add_dams')
@@ -301,7 +302,7 @@ def list_dams(request):
         rows=table_rows,
         searching=False,
         orderClasses=False,
-        lengthMenu=[ [10, 25, 50, -1], [10, 25, 50, "All"] ],
+        lengthMenu=[[10, 25, 50, -1], [10, 25, 50, "All"]],
     )
 
     context = {

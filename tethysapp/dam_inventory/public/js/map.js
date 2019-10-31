@@ -1,5 +1,4 @@
-$(function()
-{
+$(function() {
     // Create new Overlay with the #popup element
     var popup = new ol.Overlay({
         element: document.getElementById('popup')
@@ -27,49 +26,37 @@ $(function()
             // Get coordinates of the point to set position of the popup
             var coordinates = selected_feature.getGeometry().getCoordinates();
 
-            // Load hydrograph dynamically with AJAX
-            $.ajax({
-                url: '/apps/dam-inventory/hydrographs/' + selected_feature.get('id') + '/ajax/',
-                method: 'GET',
-                success: function(plot_html) {
-                    var popup_content = '<div class="dam-popup">' +
-                        '<p><b>' + selected_feature.get('name') + '</b></p>' +
-                        '<table class="table  table-condensed">' +
-                            '<tr>' +
-                                '<th>Owner:</th>' +
-                                '<td>' + selected_feature.get('owner') + '</td>' +
-                            '</tr>' +
-                            '<tr>' +
-                                '<th>River:</th>' +
-                                '<td>' + selected_feature.get('river') + '</td>' +
-                            '</tr>' +
-                            '<tr>' +
-                                '<th>Date Built:</th>' +
-                                '<td>' + selected_feature.get('date_built') + '</td>' +
-                            '</tr>' +
-                        '</table>' +
-                        plot_html +
-                    '</div>';
+            var popup_content = '<div class="dam-popup">' +
+                                    '<h5>' + selected_feature.get('name') + '</h5>' +
+                                    '<h6>Owner:</h6>' +
+                                    '<span>' + selected_feature.get('owner') + '</span>' +
+                                    '<h6>River:</h6>' +
+                                    '<span>' + selected_feature.get('river') + '</span>' +
+                                    '<h6>Date Built:</h6>' +
+                                    '<span>' + selected_feature.get('date_built') + '</span>' +
+                                    '<div id="plot-content"></div>' +
+                                '</div>';
 
-                    // Clean up last popup and reinitialize
-                    $(popup_element).popover('destroy');
+            // Clean up last popup and reinitialize
+            $(popup_element).popover('destroy');
 
-                    // Delay arbitrarily to wait for previous popover to
-                    // be deleted before showing new popover.
-                    setTimeout(function() {
-                        popup.setPosition(coordinates);
+            // Delay arbitrarily to wait for previous popover to
+            // be deleted before showing new popover.
+            setTimeout(function() {
+                popup.setPosition(coordinates);
 
-                        $(popup_element).popover({
-                          'placement': 'top',
-                          'animation': true,
-                          'html': true,
-                          'content': popup_content
-                        });
+                $(popup_element).popover({
+                  'placement': 'top',
+                  'animation': true,
+                  'html': true,
+                  'content': popup_content
+                });
 
-                        $(popup_element).popover('show');
-                    }, 500);
-                }
-            });
+                $(popup_element).popover('show');
+
+                // Load hydrograph dynamically
+                $('#plot-content').load('/apps/dam-inventory/hydrographs/' + selected_feature.get('id') + '/ajax/');
+            }, 500);
 
         } else {
             // remove pop up when selecting nothing on the map
