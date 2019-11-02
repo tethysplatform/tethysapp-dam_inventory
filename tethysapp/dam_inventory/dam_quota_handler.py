@@ -1,11 +1,3 @@
-"""
-********************************************************************************
-* Name: workspace.py
-* Author: tbayer
-* Created On: February 5, 2019
-* Copyright: (c) Aquaveo 2018
-********************************************************************************
-"""
 from tethys_quotas.handlers.base import ResourceQuotaHandler
 from .model import Dam
 from .app import DamInventory as app

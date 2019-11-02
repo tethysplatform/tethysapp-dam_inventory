@@ -1,12 +1,12 @@
 {% extends "tethys_apps/app_base.html" %}
 
-{% load staticfiles %}
+{% load static %}
 
 {% block title %}{{ tethys_app.name }}{% endblock %}
 
 {% block app_icon %}
   {# The path you provided in your app.py is accessible through the tethys_app.icon context variable #}
-  <img src="{% static tethys_app.icon %}">
+  <img src="{% if 'http' in tethys_app.icon %}{{ tethys_app.icon }}{% else %}{% static tethys_app.icon %}{% endif %}" />
 {% endblock %}
 
 {# The name you provided in your app.py is accessible through the tethys_app.name context variable #}
@@ -20,10 +20,8 @@
   <li class="title">Navigation</li>
   <li class="{% if request.path == home_url %}active{% endif %}"><a href="{{ home_url }}">Home</a></li>
   <li class="{% if request.path == list_dam_url %}active{% endif %}"><a href="{{ list_dam_url }}">Dams</a></li>
-  {% if can_add_dams %}
   <li class="{% if request.path == add_dam_url %}active{% endif %}"><a href="{{ add_dam_url }}">Add Dam</a></li>
   <li class="{% if request.path == assign_hydrograph_url %}active{% endif %}"><a href="{{ assign_hydrograph_url }}">Assign Hydrograph</a></li>
-  {% endif %}
 {% endblock %}
 
 {% block app_content %}

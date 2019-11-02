@@ -1,8 +1,8 @@
 from plotly import graph_objs as go
 from tethys_gizmos.gizmo_options import PlotlyView
 
-from tethysapp.dam_inventory.app import DamInventory as app
-from tethysapp.dam_inventory.model import Hydrograph
+from .app import DamInventory as app
+from .model import Hydrograph
 
 
 def create_hydrograph(hydrograph_id, height='520px', width='100%'):

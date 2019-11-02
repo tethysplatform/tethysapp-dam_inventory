@@ -2,7 +2,6 @@ import json
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, Float, String, ForeignKey
 from sqlalchemy.orm import sessionmaker, relationship
-
 from .app import DamInventory as app
 
 Base = declarative_base()
@@ -78,7 +77,7 @@ def add_new_dam(location, name, owner, river, date_built, user_id):
         owner=owner,
         river=river,
         date_built=date_built,
-        user_id=user_id,
+        user_id=user_id
     )
 
     # Get connection/session to database
@@ -91,23 +90,6 @@ def add_new_dam(location, name, owner, river, date_built, user_id):
     # Commit the session and close the connection
     session.commit()
     session.close()
-
-
-def get_hydrograph(dam_id):
-    """
-    Get hydrograph id from dam id.
-    """
-    Session = app.get_persistent_store_database('primary_db', as_sessionmaker=True)
-    session = Session()
-
-    # Query if hydrograph exists for dam
-    hydrograph = session.query(Hydrograph).filter_by(dam_id=dam_id).first()
-    session.close()
-
-    if hydrograph:
-        return hydrograph.id
-    else:
-        return None
 
 
 def get_all_dams():
@@ -123,62 +105,6 @@ def get_all_dams():
     session.close()
 
     return dams
-
-
-def get_all_hydrographs():
-    """
-    Get all persisted hydrographs.
-    """
-    # Get connection/session to database
-    Session = app.get_persistent_store_database('primary_db', as_sessionmaker=True)
-    session = Session()
-
-    # Query for all dam records
-    dams = session.query(Dam).all()
-    session.close()
-
-    return dams
-
-
-def init_primary_db(engine, first_time):
-    """
-    Initializer for the primary database.
-    """
-    # Create all the tables
-    Base.metadata.create_all(engine)
-
-    # Add data
-    if first_time:
-        # Make session
-        Session = sessionmaker(bind=engine)
-        session = Session()
-
-        # Initialize database with two dams
-        dam1 = Dam(
-            latitude=40.406624,
-            longitude=-111.529133,
-            name="Deer Creek",
-            owner="Reclamation",
-            river="Provo River",
-            date_built="April 12, 1993",
-            user_id=-1,
-        )
-
-        dam2 = Dam(
-            latitude=40.598168,
-            longitude=-111.424055,
-            name="Jordanelle",
-            owner="Reclamation",
-            river="Provo River",
-            date_built="1941",
-            user_id=-1,
-        )
-
-        # Add the dams to the session, commit, and close
-        session.add(dam1)
-        session.add(dam2)
-        session.commit()
-        session.close()
 
 
 def assign_hydrograph_to_dam(dam_id, hydrograph_file):
@@ -249,3 +175,44 @@ def get_hydrograph(dam_id):
         return hydrograph.id
     else:
         return None
+
+
+def init_primary_db(engine, first_time):
+    """
+    Initializer for the primary database.
+    """
+    # Create all the tables
+    Base.metadata.create_all(engine)
+
+    # Add data
+    if first_time:
+        # Make session
+        Session = sessionmaker(bind=engine)
+        session = Session()
+
+        # Initialize database with two dams
+        dam1 = Dam(
+            latitude=40.406624,
+            longitude=-111.529133,
+            name="Deer Creek",
+            owner="Reclamation",
+            river="Provo River",
+            date_built="April 12, 1993",
+            user_id=-1
+        )
+
+        dam2 = Dam(
+            latitude=40.598168,
+            longitude=-111.424055,
+            name="Jordanelle",
+            owner="Reclamation",
+            river="Provo River",
+            date_built="1941",
+            user_id=-1
+        )
+
+        # Add the dams to the session, commit, and close
+        session.add(dam1)
+        session.add(dam2)
+        session.commit()
+        session.close()
