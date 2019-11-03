@@ -1,23 +1,26 @@
-from django.shortcuts import render, reverse, redirect
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-from tethys_sdk.gizmos import MapView, Button, TextInput, DatePicker, SelectInput, DataTableView, MVDraw, MVView, MVLayer
-
+from django.shortcuts import render, reverse, redirect
+from tethys_sdk.permissions import login_required
+from tethys_sdk.gizmos import (Button, MapView, TextInput, DatePicker, 
+                               SelectInput, DataTableView, MVDraw, MVView,
+                               MVLayer)
+from tethys_sdk.workspaces import app_workspace
 from .model import add_new_dam, get_all_dams
 
 
+@app_workspace
 @login_required()
-def home(request):
+def home(request, app_workspace):
     """
     Controller for the app home page.
     """
     # Get list of dams and create dams MVLayer:
-    dams = get_all_dams()
+    dams = get_all_dams(app_workspace.path)
     features = []
     lat_list = []
     lng_list = []
 
-    # Define a GeoJSON Features
+    # Define GeoJSON Features
     for dam in dams:
         dam_location = dam.pop('location')
         lat_list.append(dam_location['coordinates'][1])
@@ -63,7 +66,7 @@ def home(request):
         source='GeoJSON',
         options=dams_feature_collection,
         legend_title='Dams',
-        layer_options={'style': style},
+        layer_options={'style': style}
     )
 
     # Define view centered on dam locations
@@ -104,40 +107,37 @@ def home(request):
     return render(request, 'dam_inventory/home.html', context)
 
 
+@app_workspace
 @login_required()
-def add_dam(request):
+def add_dam(request, app_workspace):
     """
     Controller for the Add Dam page.
     """
     # Default Values
-    location = ''
     name = ''
     owner = 'Reclamation'
     river = ''
     date_built = ''
+    location = ''
 
     # Errors
-    location_error = ''
     name_error = ''
     owner_error = ''
     river_error = ''
     date_error = ''
+    location_error = ''
 
     # Handle form submission
     if request.POST and 'add-button' in request.POST:
         # Get values
         has_errors = False
-        location = request.POST.get('geometry', None)
         name = request.POST.get('name', None)
         owner = request.POST.get('owner', None)
         river = request.POST.get('river', None)
         date_built = request.POST.get('date-built', None)
+        location = request.POST.get('geometry', None)
 
         # Validate
-        if not location:
-            has_errors = True
-            location_error = 'Location is required.'
-
         if not name:
             has_errors = True
             name_error = 'Name is required.'
@@ -154,34 +154,17 @@ def add_dam(request):
             has_errors = True
             date_error = 'Date Built is required.'
 
+        if not location:
+            has_errors = True
+            location_error = 'Location is required.'
+
         if not has_errors:
-            add_new_dam(location=location, name=name, owner=owner, river=river, date_built=date_built)
+            add_new_dam(db_directory=app_workspace.path, location=location, name=name, owner=owner, river=river, date_built=date_built)
             return redirect(reverse('dam_inventory:home'))
 
         messages.error(request, "Please fix errors.")
 
     # Define form gizmos
-    initial_view = MVView(
-        projection='EPSG:4326',
-        center=[-98.6, 39.8],
-        zoom=3.5
-    )
-
-    drawing_options = MVDraw(
-        controls=['Modify', 'Delete', 'Move', 'Point'],
-        initial='Point',
-        output_format='GeoJSON',
-        point_color='#FF0000'
-    )
-
-    location_input = MapView(
-        height='300px',
-        width='100%',
-        basemap='OpenStreetMap',
-        draw=drawing_options,
-        view=initial_view
-    )
-
     name_input = TextInput(
         display_text='Name',
         name='name',
@@ -217,6 +200,27 @@ def add_dam(request):
         error=date_error
     )
 
+    initial_view = MVView(
+        projection='EPSG:4326',
+        center=[-98.6, 39.8],
+        zoom=3.5
+    )
+
+    drawing_options = MVDraw(
+        controls=['Modify', 'Delete', 'Move', 'Point'],
+        initial='Point',
+        output_format='GeoJSON',
+        point_color='#FF0000'
+    )
+
+    location_input = MapView(
+        height='300px',
+        width='100%',
+        basemap='OpenStreetMap',
+        draw=drawing_options,
+        view=initial_view
+    )
+
     add_button = Button(
         display_text='Add',
         name='add-button',
@@ -233,12 +237,12 @@ def add_dam(request):
     )
 
     context = {
-        'location_input': location_input,
-        'location_error': location_error,
         'name_input': name_input,
         'owner_input': owner_input,
         'river_input': river_input,
         'date_built_input': date_built,
+        'location_input': location_input,
+        'location_error': location_error,
         'add_button': add_button,
         'cancel_button': cancel_button,
     }
@@ -246,12 +250,14 @@ def add_dam(request):
     return render(request, 'dam_inventory/add_dam.html', context)
 
 
+
+@app_workspace
 @login_required()
-def list_dams(request):
+def list_dams(request, app_workspace):
     """
     Show all dams in a table view.
     """
-    dams = get_all_dams()
+    dams = get_all_dams(app_workspace.path)
     table_rows = []
 
     for dam in dams:

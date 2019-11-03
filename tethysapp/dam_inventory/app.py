@@ -12,8 +12,8 @@ class DamInventory(TethysAppBase):
     icon = 'dam_inventory/images/dam_icon.png'
     package = 'dam_inventory'
     root_url = 'dam-inventory'
-    color = '#01AEBF'
-    description = 'Place a brief description of your app here.'
+    color = '#244C96'
+    description = ''
     tags = ''
     enable_feedback = False
     feedback_emails = []
