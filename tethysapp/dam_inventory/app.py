@@ -23,6 +23,7 @@ class DamInventory(TethysAppBase):
         """
         Add controllers
         """
+        from .consumers import NotificationsConsumer
         UrlMap = url_map_maker(self.root_url)
 
         url_maps = (
@@ -59,7 +60,7 @@ class DamInventory(TethysAppBase):
             UrlMap(
                 name='dam_notification',
                 url='dam-inventory/dams/notifications',
-                controller='dam_inventory.consumers.NotificationsConsumer',
+                controller=NotificationsConsumer.as_asgi(),
                 protocol='websocket'
             ),
         )
