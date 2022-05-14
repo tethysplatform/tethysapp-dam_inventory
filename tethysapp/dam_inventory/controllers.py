@@ -1,9 +1,9 @@
 from django.shortcuts import render, reverse
-from tethys_sdk.permissions import login_required
 from tethys_sdk.gizmos import MapView, Button
+from tethys_sdk.routing import controller
 
 
-@login_required()
+@controller
 def home(request):
     """
     Controller for the app home page.
@@ -13,14 +13,14 @@ def home(request):
         height='100%',
         width='100%',
         layers=[],
-        basemap='OpenStreetMap',
+        basemap=['OpenStreetMap'],
     )
 
 
     add_dam_button = Button(
         display_text='Add Dam',
         name='add-dam-button',
-        icon='glyphicon glyphicon-plus',
+        icon='plus-square',
         style='success',
         href=reverse('dam_inventory:add_dam')
     )
@@ -33,7 +33,7 @@ def home(request):
     return render(request, 'dam_inventory/home.html', context)
 
 
-@login_required()
+@controller(url='dams/add')
 def add_dam(request):
     """
     Controller for the Add Dam page.
@@ -41,7 +41,7 @@ def add_dam(request):
     add_button = Button(
         display_text='Add',
         name='add-button',
-        icon='glyphicon glyphicon-plus',
+        icon='plus-square',
         style='success'
     )
 

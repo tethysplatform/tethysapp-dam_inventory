@@ -8,36 +8,15 @@ class DamInventory(TethysAppBase):
     """
 
     name = 'Dam Inventory'
-    index = 'dam_inventory:home'
-    icon = 'dam_inventory/images/dam_icon.png'
-    package = 'dam_inventory'
+    description = ''
+    package = 'dam_inventory'  # WARNING: Do not change this value
+    index = 'home'
+    icon = f'{package}/images/dam_icon.png'
     root_url = 'dam-inventory'
     color = '#244C96'
-    description = ''
     tags = ''
     enable_feedback = False
     feedback_emails = []
-
-    def url_maps(self):
-        """
-        Add controllers
-        """
-        UrlMap = url_map_maker(self.root_url)
-
-        url_maps = (
-            UrlMap(
-                name='home',
-                url='dam-inventory',
-                controller='dam_inventory.controllers.home'
-            ),
-            UrlMap(
-                name='add_dam',
-                url='dam-inventory/dams/add',
-                controller='dam_inventory.controllers.add_dam'
-            ),
-        )
-
-        return url_maps
 
     def custom_settings(self):
         """

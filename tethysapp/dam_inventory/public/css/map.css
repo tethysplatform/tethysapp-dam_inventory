@@ -2,8 +2,6 @@
     padding: 0;
 }
 
-#app-content, 
-#inner-app-content, 
-#map_view_outer_container {
+#app-content, #inner-app-content, #map_view_outer_container {
     height: 100%;
 }

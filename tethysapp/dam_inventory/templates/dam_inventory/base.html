@@ -13,11 +13,11 @@
 {% block app_title %}{{ tethys_app.name }}{% endblock %}
 
 {% block app_navigation_items %}
-  {% url 'dam_inventory:home' as home_url %}
-  {% url 'dam_inventory:add_dam' as add_dam_url %}
-  <li class="title">Navigation</li>
-  <li class="{% if request.path == home_url %}active{% endif %}"><a href="{{ home_url }}">Home</a></li>
-  <li class="{% if request.path == add_dam_url %}active{% endif %}"><a href="{{ add_dam_url }}">Add Dam</a></li>
+{% url 'dam_inventory:home' as home_url %}
+{% url 'dam_inventory:add_dam' as add_dam_url %}
+<li class="nav-item title">Navigation</li>
+<li class="nav-item"><a class="nav-link{% if request.path == home_url %} active{% endif %}" href="{{ home_url }}">Home</a></li>
+<li class="nav-item"><a class="nav-link{% if request.path == add_dam_url %} active{% endif %}" href="{{ add_dam_url }}">Add Dam</a></li>
 {% endblock %}
 
 {% block app_content %}
