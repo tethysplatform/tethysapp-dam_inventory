@@ -1,17 +1,17 @@
 from django.utils.html import format_html
 from django.contrib import messages
 from django.shortcuts import render, reverse, redirect
-from tethys_sdk.permissions import login_required
 from tethys_sdk.gizmos import (Button, MapView, TextInput, DatePicker, 
                                SelectInput, DataTableView, MVDraw, MVView,
                                MVLayer)
-from tethys_sdk.permissions import permission_required, has_permission
+from tethys_sdk.routing import controller
+from tethys_sdk.permissions import has_permission
 from .model import Dam, add_new_dam, get_all_dams, assign_hydrograph_to_dam, get_hydrograph
 from .app import DamInventory as app
 from .helpers import create_hydrograph
 
 
-@login_required()
+@controller
 def home(request):
     """
     Controller for the app home page.
@@ -95,14 +95,14 @@ def home(request):
         height='100%',
         width='100%',
         layers=[dams_layer],
-        basemap='OpenStreetMap',
+        basemap=['OpenStreetMap'],
         view=view_options
     )
 
     add_dam_button = Button(
         display_text='Add Dam',
         name='add-dam-button',
-        icon='glyphicon glyphicon-plus',
+        icon='plus-square',
         style='success',
         href=reverse('dam_inventory:add_dam')
     )
@@ -116,7 +116,7 @@ def home(request):
     return render(request, 'dam_inventory/home.html', context)
 
 
-@permission_required('add_dams')
+@controller(url='dams/add', permissions_required='add_dams')
 def add_dam(request):
     """
     Controller for the Add Dam page.
@@ -237,7 +237,7 @@ def add_dam(request):
     location_input = MapView(
         height='300px',
         width='100%',
-        basemap='OpenStreetMap',
+        basemap=['OpenStreetMap'],
         draw=drawing_options,
         view=initial_view
     )
@@ -245,7 +245,7 @@ def add_dam(request):
     add_button = Button(
         display_text='Add',
         name='add-button',
-        icon='glyphicon glyphicon-plus',
+        icon='plus-square',
         style='success',
         attributes={'form': 'add-dam-form'},
         submit=True
@@ -272,7 +272,7 @@ def add_dam(request):
     return render(request, 'dam_inventory/add_dam.html', context)
 
 
-@login_required()
+@controller(name='dams', url='dams')
 def list_dams(request):
     """
     Show all dams in a table view.
@@ -313,7 +313,7 @@ def list_dams(request):
     return render(request, 'dam_inventory/list_dams.html', context)
 
 
-@login_required()
+@controller(url='hydrographs/assign')
 def assign_hydrograph(request):
     """
     Controller for the Add Hydrograph page.
@@ -376,7 +376,7 @@ def assign_hydrograph(request):
     add_button = Button(
         display_text='Add',
         name='add-button',
-        icon='glyphicon glyphicon-plus',
+        icon='plus-square',
         style='success',
         attributes={'form': 'add-hydrograph-form'},
         submit=True
@@ -401,7 +401,7 @@ def assign_hydrograph(request):
     return render(request, 'dam_inventory/assign_hydrograph.html', context)
 
 
-@login_required()
+@controller(url='hydrographs/{hydrograph_id}')
 def hydrograph(request, hydrograph_id):
     """
     Controller for the Hydrograph Page.
@@ -415,7 +415,7 @@ def hydrograph(request, hydrograph_id):
     return render(request, 'dam_inventory/hydrograph.html', context)
 
 
-@login_required()
+@controller(url='hydrographs/{dam_id}/ajax')
 def hydrograph_ajax(request, dam_id):
     """
     Controller for the Hydrograph Page.
