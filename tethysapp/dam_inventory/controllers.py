@@ -1,15 +1,13 @@
 from django.contrib import messages
 from django.shortcuts import render, reverse, redirect
-from tethys_sdk.permissions import login_required
 from tethys_sdk.gizmos import (Button, MapView, TextInput, DatePicker, 
                                SelectInput, DataTableView, MVDraw, MVView,
                                MVLayer)
-from tethys_sdk.workspaces import app_workspace
+from tethys_sdk.routing import controller
 from .model import add_new_dam, get_all_dams
 
 
-@app_workspace
-@login_required()
+@controller(app_workspace=True)
 def home(request, app_workspace):
     """
     Controller for the app home page.
@@ -87,14 +85,14 @@ def home(request, app_workspace):
         height='100%',
         width='100%',
         layers=[dams_layer],
-        basemap='OpenStreetMap',
+        basemap=['OpenStreetMap'],
         view=view_options
     )
 
     add_dam_button = Button(
         display_text='Add Dam',
         name='add-dam-button',
-        icon='glyphicon glyphicon-plus',
+        icon='plus-square',
         style='success',
         href=reverse('dam_inventory:add_dam')
     )
@@ -107,8 +105,7 @@ def home(request, app_workspace):
     return render(request, 'dam_inventory/home.html', context)
 
 
-@app_workspace
-@login_required()
+@controller(url='dams/add', app_workspace=True)
 def add_dam(request, app_workspace):
     """
     Controller for the Add Dam page.
@@ -216,7 +213,7 @@ def add_dam(request, app_workspace):
     location_input = MapView(
         height='300px',
         width='100%',
-        basemap='OpenStreetMap',
+        basemap=['OpenStreetMap'],
         draw=drawing_options,
         view=initial_view
     )
@@ -224,7 +221,7 @@ def add_dam(request, app_workspace):
     add_button = Button(
         display_text='Add',
         name='add-button',
-        icon='glyphicon glyphicon-plus',
+        icon='plus-square',
         style='success',
         attributes={'form': 'add-dam-form'},
         submit=True
@@ -251,8 +248,7 @@ def add_dam(request, app_workspace):
 
 
 
-@app_workspace
-@login_required()
+@controller(name='dams', url='dams', app_workspace=True)
 def list_dams(request, app_workspace):
     """
     Show all dams in a table view.
