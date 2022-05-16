@@ -2,19 +2,17 @@ import os
 from django.utils.html import format_html
 from django.contrib import messages
 from django.shortcuts import render, reverse, redirect
-from tethys_sdk.permissions import login_required
+from tethys_sdk.routing import controller
 from tethys_sdk.gizmos import (Button, MapView, TextInput, DatePicker, 
                                SelectInput, DataTableView, MVDraw, MVView,
                                MVLayer)
-from tethys_sdk.permissions import permission_required, has_permission
-from tethys_sdk.workspaces import user_workspace
-from tethys_sdk.quotas import enforce_quota
+from tethys_sdk.permissions import has_permission
 from .model import Dam, add_new_dam, get_all_dams, assign_hydrograph_to_dam, get_hydrograph
 from .app import DamInventory as app
 from .helpers import create_hydrograph
 
 
-@login_required()
+@controller
 def home(request):
     """
     Controller for the app home page.
@@ -98,14 +96,14 @@ def home(request):
         height='100%',
         width='100%',
         layers=[dams_layer],
-        basemap='OpenStreetMap',
+        basemap=['OpenStreetMap'],
         view=view_options
     )
 
     add_dam_button = Button(
         display_text='Add Dam',
         name='add-dam-button',
-        icon='glyphicon glyphicon-plus',
+        icon='plus-square',
         style='success',
         href=reverse('dam_inventory:add_dam')
     )
@@ -119,8 +117,7 @@ def home(request):
     return render(request, 'dam_inventory/home.html', context)
 
 
-@enforce_quota('user_dam_quota')
-@permission_required('add_dams')
+@controller(url='dams/add', enforce_quotas='user_dam_quota')
 def add_dam(request):
     """
     Controller for the Add Dam page.
@@ -178,18 +175,11 @@ def add_dam(request):
             Session = app.get_persistent_store_database('primary_db', as_sessionmaker=True)
             session = Session()
             num_dams = session.query(Dam).count()
-            user_id = request.user.id
 
             # Only add the dam if custom setting doesn't exist or we have not exceed max_dams
             if not max_dams or num_dams < max_dams:
-                add_new_dam(
-                    location=location,
-                    name=name,
-                    owner=owner,
-                    river=river,
-                    date_built=date_built,
-                    user_id=user_id
-                )
+                add_new_dam(location=location, name=name, owner=owner, river=river,
+                            date_built=date_built, user_id=request.user.id)
             else:
                 messages.warning(request, 'Unable to add dam "{0}", because the inventory is full.'.format(name))
 
@@ -249,7 +239,7 @@ def add_dam(request):
     location_input = MapView(
         height='300px',
         width='100%',
-        basemap='OpenStreetMap',
+        basemap=['OpenStreetMap'],
         draw=drawing_options,
         view=initial_view
     )
@@ -257,7 +247,7 @@ def add_dam(request):
     add_button = Button(
         display_text='Add',
         name='add-button',
-        icon='glyphicon glyphicon-plus',
+        icon='plus-square',
         style='success',
         attributes={'form': 'add-dam-form'},
         submit=True
@@ -284,7 +274,7 @@ def add_dam(request):
     return render(request, 'dam_inventory/add_dam.html', context)
 
 
-@login_required()
+@controller(name='dams', url='dams')
 def list_dams(request):
     """
     Show all dams in a table view.
@@ -305,7 +295,7 @@ def list_dams(request):
             url = reverse('dam_inventory:delete_dam', kwargs={'dam_id': dam.id})
             dam_delete = format_html('<a class="btn btn-danger" href="{}">Delete Dam</a>'.format(url))
         else:
-            dam_delete = format_html('<a class="btn btn-danger disabled" title="You are not the creator of the dam" '
+            dam_delete = format_html('<a class="btn btn-danger disabled" title="You are not the creator of this dam" '
                                      'style="pointer-events: auto;">Delete Dam</a>')
 
         table_rows.append(
@@ -332,8 +322,7 @@ def list_dams(request):
     return render(request, 'dam_inventory/list_dams.html', context)
 
 
-@user_workspace
-@login_required()
+@controller(url='hydrographs/assign', user_workspace=True)
 def assign_hydrograph(request, user_workspace):
     """
     Controller for the Add Hydrograph page.
@@ -409,7 +398,7 @@ def assign_hydrograph(request, user_workspace):
     add_button = Button(
         display_text='Add',
         name='add-button',
-        icon='glyphicon glyphicon-plus',
+        icon='plus-square',
         style='success',
         attributes={'form': 'add-hydrograph-form'},
         submit=True
@@ -434,7 +423,7 @@ def assign_hydrograph(request, user_workspace):
     return render(request, 'dam_inventory/assign_hydrograph.html', context)
 
 
-@login_required()
+@controller(url='hydrographs/{hydrograph_id}')
 def hydrograph(request, hydrograph_id):
     """
     Controller for the Hydrograph Page.
@@ -448,7 +437,7 @@ def hydrograph(request, hydrograph_id):
     return render(request, 'dam_inventory/hydrograph.html', context)
 
 
-@login_required()
+@controller(url='hydrographs/{dam_id}/ajax')
 def hydrograph_ajax(request, dam_id):
     """
     Controller for the Hydrograph Page.
@@ -471,8 +460,7 @@ def hydrograph_ajax(request, dam_id):
     return render(request, 'dam_inventory/hydrograph_ajax.html', context)
 
 
-@user_workspace
-@login_required()
+@controller(url='dams/{dam_id}/delete', user_workspace=True)
 def delete_dam(request, user_workspace, dam_id):
     """
     Controller for the deleting a dam.

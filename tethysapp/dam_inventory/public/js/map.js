@@ -38,7 +38,7 @@ $(function() {
                                 '</div>';
 
             // Clean up last popup and reinitialize
-            $(popup_element).popover('destroy');
+            $(popup_element).popover('dispose');
 
             // Delay arbitrarily to wait for previous popover to
             // be deleted before showing new popover.
@@ -46,10 +46,10 @@ $(function() {
                 popup.setPosition(coordinates);
 
                 $(popup_element).popover({
-                  'placement': 'top',
-                  'animation': true,
-                  'html': true,
-                  'content': popup_content
+                    'placement': 'top',
+                    'animation': true,
+                    'html': true,
+                    'content': popup_content
                 });
 
                 $(popup_element).popover('show');
@@ -60,7 +60,7 @@ $(function() {
 
         } else {
             // remove pop up when selecting nothing on the map
-            $(popup_element).popover('destroy');
+            $(popup_element).popover('dispose');
         }
     });
 });

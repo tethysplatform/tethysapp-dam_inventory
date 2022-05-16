@@ -115,7 +115,7 @@ class DamInventoryTestCase(TethysTestCase):
         A list of assert methods is included here for reference or to get you started:
             assertEqual(a, b)           a == b
             assertNotEqual(a, b)        a != b
-            assertTrue(x)              bool(x) is True
+            assertTrue(x)               bool(x) is True
             assertFalse(x)              bool(x) is False
             assertIs(a, b)              a is b
             assertIsNot(a, b)           a is not b
