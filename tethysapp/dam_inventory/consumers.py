@@ -1,7 +1,9 @@
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
+from tethys_sdk.routing import consumer
 
 
+@consumer(name='dam_notification', url='dams/notifications')
 class NotificationsConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         await self.accept()

@@ -1,5 +1,5 @@
 {% extends "dam_inventory/base.html" %}
-{% load tethys_gizmos staticfiles %}
+{% load tethys_gizmos static %}
 
 {% block import_gizmos %}
   {% import_gizmo_dependency plotly_view %}
@@ -11,9 +11,9 @@
 {% endblock %}
 
 {% block after_app_content %}
-{% gizmo message_box %}
+  {% gizmo message_box %}
   <script>
-    var notification_ws = new WebSocket('ws://' + window.location.host + '/dam-inventory/dams/notifications/ws/');
+    var notification_ws = new WebSocket('ws://' + window.location.host + '/apps/dam-inventory/dams/notifications/ws/');
     var n_div = $("#notification");
     var n_title = $("#notificationLabel");
     var n_content = $('#notification .lead');
@@ -23,7 +23,7 @@
       if (data["message"] = "New Dam") {
         n_title.html('Dam Notification');
         n_content.html('A new dam has been added. Refresh this page to load it.');
-        n_div.modal();
+        n_div.modal('show');
       }
     };
   </script>
