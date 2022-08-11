@@ -1,4 +1,4 @@
-from tethys_sdk.base import TethysAppBase, url_map_maker
+from tethys_sdk.base import TethysAppBase
 from tethys_sdk.app_settings import CustomSetting, PersistentStoreDatabaseSetting
 from tethys_sdk.permissions import Permission, PermissionGroup
 
@@ -9,63 +9,15 @@ class DamInventory(TethysAppBase):
     """
 
     name = 'Dam Inventory'
-    index = 'dam_inventory:home'
-    icon = 'dam_inventory/images/dam_icon.png'
     package = 'dam_inventory'
+    index = 'home'
+    icon = f'{package}/images/dam_icon.png'
     root_url = 'dam-inventory'
     color = '#244C96'
     description = ''
     tags = ''
     enable_feedback = False
     feedback_emails = []
-
-    def url_maps(self):
-        """
-        Add controllers
-        """
-        from .consumers import NotificationsConsumer
-        UrlMap = url_map_maker(self.root_url)
-
-        url_maps = (
-            UrlMap(
-                name='home',
-                url='dam-inventory',
-                controller='dam_inventory.controllers.home'
-            ),
-            UrlMap(
-                name='add_dam',
-                url='dam-inventory/dams/add',
-                controller='dam_inventory.controllers.add_dam'
-            ),
-            UrlMap(
-                name='dams',
-                url='dam-inventory/dams',
-                controller='dam_inventory.controllers.list_dams'
-            ),
-            UrlMap(
-                name='assign_hydrograph',
-                url='dam-inventory/hydrographs/assign',
-                controller='dam_inventory.controllers.assign_hydrograph'
-            ),
-            UrlMap(
-                name='hydrograph',
-                url='dam-inventory/hydrographs/{hydrograph_id}',
-                controller='dam_inventory.controllers.hydrograph'
-            ),
-            UrlMap(
-                name='hydrograph_ajax',
-                url='dam-inventory/hydrographs/{dam_id}/ajax',
-                controller='dam_inventory.controllers.hydrograph_ajax'
-            ),
-            UrlMap(
-                name='dam_notification',
-                url='dam-inventory/dams/notifications',
-                controller=NotificationsConsumer.as_asgi(),
-                protocol='websocket'
-            ),
-        )
-
-        return url_maps
 
     def custom_settings(self):
         """
