@@ -9,6 +9,8 @@ requirements:
   conda:
     channels:
     packages:
+      - sqlalchemy
+      - psycopg2
 
   pip:
 
