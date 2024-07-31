@@ -9,3 +9,4 @@
 *.DS_Store
 .idea/
 services.yml
+tethysapp/dam_inventory/workspaces/*

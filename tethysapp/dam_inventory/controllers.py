@@ -1,36 +1,16 @@
-from django.shortcuts import render, reverse
-from tethys_sdk.gizmos import MapView, Button
+from tethys_sdk.gizmos import Button
+from tethys_sdk.layouts import MapLayout
 from tethys_sdk.routing import controller
+from .app import App
 
 
-@controller
-def home(request):
-    """
-    Controller for the app home page.
-    """
-
-    dam_inventory_map = MapView(
-        height='100%',
-        width='100%',
-        layers=[],
-        basemap=['OpenStreetMap'],
-    )
-
-
-    add_dam_button = Button(
-        display_text='Add Dam',
-        name='add-dam-button',
-        icon='plus-square',
-        style='success',
-        href=reverse('dam_inventory:add_dam')
-    )
-
-    context = {
-        'dam_inventory_map': dam_inventory_map,
-        'add_dam_button': add_dam_button
-    }
-
-    return render(request, 'dam_inventory/home.html', context)
+@controller(name="home")
+class HomeMap(MapLayout):
+    app = App
+    base_template = f'{App.package}/base.html'
+    map_title = 'Dam Inventory'
+    map_subtitle = 'Tutorial'
+    basemaps = ['OpenStreetMap', 'ESRI']
 
 
 @controller(url='dams/add')
@@ -48,7 +28,7 @@ def add_dam(request):
     cancel_button = Button(
         display_text='Cancel',
         name='cancel-button',
-        href=reverse('dam_inventory:home')
+        href=App.reverse('home')
     )
 
     context = {
@@ -56,4 +36,4 @@ def add_dam(request):
         'cancel_button': cancel_button,
     }
 
-    return render(request, 'dam_inventory/add_dam.html', context)
+    return App.render(request, 'add_dam.html', context)
