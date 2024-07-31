@@ -1,15 +1,16 @@
-{% extends "dam_inventory/base.html" %}
-{% load tethys_gizmos static %}
+{% extends tethys_app.package|add:"/base.html" %}
+{% load tethys %}
+{% load static tethys %}
 
 {% block app_content %}
-  {% gizmo dam_inventory_map %}
+{% gizmo dam_inventory_map %}
 {% endblock %}
 
 {% block app_actions %}
-  {% gizmo add_dam_button %}
+{% gizmo add_dam_button %}
 {% endblock %}
 
 {% block styles %}
-  {{ block.super }}
-  <link href="{% static 'dam_inventory/css/map.css' %}" rel="stylesheet"/>
+    {{ block.super }}
+    <link href="{% static tethys_app|public:'css/map.css' %}" rel="stylesheet"/>
 {% endblock %}

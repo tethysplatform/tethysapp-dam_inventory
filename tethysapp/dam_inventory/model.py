@@ -1,9 +1,10 @@
+import json
 import os
 import uuid
-import json
+from pathlib import Path
 
 
-def add_new_dam(db_directory, location, name, owner, river, date_built):
+def add_new_dam(db_directory: Path | str, location: str, name: str, owner: str, river: str, date_built: str):
     """
     Persist new dam.
     """
@@ -25,40 +26,35 @@ def add_new_dam(db_directory, location, name, owner, river, date_built):
 
     # Write to file in {{db_directory}}/dams/{{uuid}}.json
     # Make dams dir if it doesn't exist
-    dams_dir = os.path.join(db_directory, 'dams')
-    if not os.path.exists(dams_dir):
-        os.mkdir(dams_dir)
+    dams_dir = Path(db_directory) / 'dams'
+    if not dams_dir.exists():
+        os.makedirs(dams_dir, exist_ok=True)
 
     # Name of the file is its id
     file_name = str(new_dam_id) + '.json'
-    file_path = os.path.join(dams_dir, file_name)
+    file_path = dams_dir / file_name
 
     # Write json
-    with open(file_path, 'w') as f:
+    with file_path.open('w') as f:
         f.write(dam_json)
 
 
-def get_all_dams(db_directory):
+def get_all_dams(db_directory: Path | str):
     """
     Get all persisted dams.
     """
     # Write to file in {{db_directory}}/dams/{{uuid}}.json
     # Make dams dir if it doesn't exist
-    dams_dir = os.path.join(db_directory, 'dams')
-    if not os.path.exists(dams_dir):
-        os.mkdir(dams_dir)
+    dams_dir = Path(db_directory) / 'dams'
+    if not dams_dir.exists():
+        os.makedirs(dams_dir, exist_ok=True)
 
     dams = []
 
-    # Open each file and convert contents to python objects
-    for dam_json in os.listdir(dams_dir):
-        # Make sure we are only looking at json files
-        if '.json' not in dam_json:
-            continue
-
-        dam_json_path = os.path.join(dams_dir, dam_json)
-        with open(dam_json_path, 'r') as f:
-            dam_dict = json.loads(f.readlines()[0])
+    # Open each json file and convert contents to python dictionaries
+    for dam_json in dams_dir.glob('*.json'):
+        with dam_json.open('r') as f:
+            dam_dict = json.loads(f.read())
             dams.append(dam_dict)
 
     return dams

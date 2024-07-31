@@ -1,7 +1,7 @@
-{% extends "dam_inventory/base.html" %}
-{% load tethys_gizmos %}
+{% extends tethys_app.package|add:"/base.html" %}
+{% load tethys %}
 
 {% block app_content %}
-  <h1>Dams</h1>
-  {% gizmo dams_table %}
+<h1>Dams</h1>
+{% gizmo dams_table %}
 {% endblock %}

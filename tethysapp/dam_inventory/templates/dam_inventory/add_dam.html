@@ -1,5 +1,5 @@
-{% extends "dam_inventory/base.html" %}
-{% load tethys_gizmos %}
+{% extends tethys_app.package|add:"/base.html" %}
+{% load tethys %}
 
 {% block app_content %}
   <h1>Add Dam</h1>
@@ -18,6 +18,6 @@
 {% endblock %}
 
 {% block app_actions %}
-  {% gizmo add_button %}
-  {% gizmo cancel_button %}
+{% gizmo cancel_button %}
+{% gizmo add_button %}
 {% endblock %}

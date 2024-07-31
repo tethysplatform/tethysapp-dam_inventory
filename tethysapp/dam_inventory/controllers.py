@@ -1,108 +1,147 @@
 from django.contrib import messages
-from django.shortcuts import render, reverse, redirect
-from tethys_sdk.gizmos import (Button, MapView, TextInput, DatePicker, 
-                               SelectInput, DataTableView, MVDraw, MVView,
-                               MVLayer)
+from tethys_sdk.gizmos import (
+    MapView, MVDraw, MVView, Button, TextInput, DatePicker, SelectInput, DataTableView
+)
+from tethys_sdk.layouts import MapLayout
 from tethys_sdk.routing import controller
+from .app import App
 from .model import add_new_dam, get_all_dams
 
 
-@controller(app_workspace=True)
-def home(request, app_workspace):
-    """
-    Controller for the app home page.
-    """
-    # Get list of dams and create dams MVLayer:
-    dams = get_all_dams(app_workspace.path)
-    features = []
-    lat_list = []
-    lng_list = []
+@controller(name="home", app_workspace=True)
+class HomeMap(MapLayout):
+    app = App
+    base_template = f'{App.package}/base.html'
+    map_title = 'Dam Inventory'
+    map_subtitle = 'Tutorial'
+    basemaps = ['OpenStreetMap', 'ESRI']
+    show_properties_popup = True
 
-    # Define GeoJSON Features
-    for dam in dams:
-        dam_location = dam.pop('location')
-        lat_list.append(dam_location['coordinates'][1])
-        lng_list.append(dam_location['coordinates'][0])
+    def compose_layers(self, request, map_view, app_workspace, *args, **kwargs):
+        # Get list of dams and create dams MVLayer:
+        dams = get_all_dams(app_workspace.path)
+        features = []
 
-        dam_feature = {
-            'type': 'Feature',
-            'geometry': {
-                'type': dam_location['type'],
-                'coordinates': dam_location['coordinates'],
+        # Define GeoJSON Features
+        for dam in dams:
+            dam_location = dam.get('location')
+            dam_feature = {
+                'type': 'Feature',
+                'geometry': {
+                    'type': dam_location['type'],
+                    'coordinates': dam_location['coordinates'],
+                },
+                'properties': {
+                    'id': dam['id'],
+                    'name': dam['name'],
+                    'owner': dam['owner'],
+                    'river': dam['river'],
+                    'date_built': dam['date_built']
+                }
             }
+
+            features.append(dam_feature)
+
+        # Define GeoJSON FeatureCollection
+        dams_feature_collection = {
+            'type': 'FeatureCollection',
+            'crs': {
+                'type': 'name',
+                'properties': {
+                    'name': 'EPSG:4326'
+                }
+            },
+            'features': features
         }
 
-        features.append(dam_feature)
+        # Compute zoom extent for the dams layer
+        layer_extent = self.compute_dams_extent(dams)
 
-    # Define GeoJSON FeatureCollection
-    dams_feature_collection = {
-        'type': 'FeatureCollection',
-        'crs': {
-            'type': 'name',
-            'properties': {
-                'name': 'EPSG:4326'
-            }
-        },
-        'features': features
-    }
+        dam_layer = self.build_geojson_layer(
+            geojson=dams_feature_collection,
+            layer_name='dams',
+            layer_title='Dams',
+            layer_variable='dams',
+            extent=layer_extent,
+            visible=True,
+            selectable=True,
+            plottable=True,
+        )
 
-    style = {'ol.style.Style': {
-        'image': {'ol.style.Circle': {
-            'radius': 10,
-            'fill': {'ol.style.Fill': {
-                'color':  '#d84e1f'
-            }},
-            'stroke': {'ol.style.Stroke': {
-                'color': '#ffffff',
-                'width': 1
-            }}
-        }}
-    }}
+        layer_groups = [
+            self.build_layer_group(
+                id='all-layers',
+                display_name='Layers',
+                layer_control='checkbox',
+                layers=[dam_layer]
+            )
+        ]
 
-    # Create a Map View Layer
-    dams_layer = MVLayer(
-        source='GeoJSON',
-        options=dams_feature_collection,
-        legend_title='Dams',
-        layer_options={'style': style}
-    )
+        # Update the map view with the new extent
+        map_view.view = MVView(
+            projection='EPSG:4326',
+            extent=layer_extent,
+            maxZoom=self.max_zoom,
+            minZoom=self.min_zoom,
+        )
 
-    # Define view centered on dam locations
-    try:
-        view_center = [sum(lng_list) / float(len(lng_list)), sum(lat_list) / float(len(lat_list))]
-    except ZeroDivisionError:
-        view_center = [-98.6, 39.8]
+        return layer_groups
 
-    view_options = MVView(
-        projection='EPSG:4326',
-        center=view_center,
-        zoom=4.5,
-        maxZoom=18,
-        minZoom=2
-    )
+    def build_map_extent_and_view(self, request, app_workspace, *args, **kwargs):
+        """
+        Builds the default MVView and BBOX extent for the map.
 
-    dam_inventory_map = MapView(
-        height='100%',
-        width='100%',
-        layers=[dams_layer],
-        basemap=['OpenStreetMap'],
-        view=view_options
-    )
+        Returns:
+            MVView, 4-list<float>: default view and extent of the project.
+        """
+        dams = get_all_dams(app_workspace.path)
+        extent = self.compute_dams_extent(dams)
 
-    add_dam_button = Button(
-        display_text='Add Dam',
-        name='add-dam-button',
-        icon='plus-square',
-        style='success',
-        href=reverse('dam_inventory:add_dam')
-    )
+        # Construct the default view
+        view = MVView(
+            projection="EPSG:4326",
+            extent=extent,
+            maxZoom=self.max_zoom,
+            minZoom=self.min_zoom,
+        )
 
-    context = {
-        'dam_inventory_map': dam_inventory_map,
-        'add_dam_button': add_dam_button
-    }
+        return view, extent
 
-    return render(request, 'dam_inventory/home.html', context)
+    def compute_dams_extent(self, dams):
+        """Compute the extent/bbox of the given dams."""
+        lat_list = []
+        lng_list = []
+
+        # Define GeoJSON Features
+        for dam in dams:
+            dam_location = dam.get('location')
+            lat_list.append(dam_location['coordinates'][1])
+            lng_list.append(dam_location['coordinates'][0])
+
+        if len(lat_list) > 1:
+            # Compute the bounding box of all the dams
+            min_x = min(lng_list)
+            min_y = min(lat_list)
+            max_x = max(lng_list)
+            max_y = max(lat_list)
+            x_dist = max_x - min_x
+            y_dist = max_y - min_y
+
+            # Buffer the bounding box
+            buffer_factor = 0.1
+            x_buffer = x_dist * buffer_factor
+            y_buffer = y_dist * buffer_factor
+            min_xb = min_x - x_buffer
+            min_yb = min_y - y_buffer
+            max_xb = max_x + x_buffer
+            max_yb = max_y + y_buffer
+
+            # Bounding box for the view
+            extent = [min_xb, min_yb, max_xb, max_yb]
+        else:
+            extent = [-125.771484, 24.527135, -66.005859, 49.667628]  # CONUS
+
+        return extent
 
 
 @controller(url='dams/add', app_workspace=True)
@@ -156,8 +195,15 @@ def add_dam(request, app_workspace):
             location_error = 'Location is required.'
 
         if not has_errors:
-            add_new_dam(db_directory=app_workspace.path, location=location, name=name, owner=owner, river=river, date_built=date_built)
-            return redirect(reverse('dam_inventory:home'))
+            add_new_dam(
+                db_directory=app_workspace.path,
+                location=location,
+                name=name,
+                owner=owner,
+                river=river,
+                date_built=date_built
+            )
+            return App.redirect(App.reverse('home'))
 
         messages.error(request, "Please fix errors.")
 
@@ -230,7 +276,7 @@ def add_dam(request, app_workspace):
     cancel_button = Button(
         display_text='Cancel',
         name='cancel-button',
-        href=reverse('dam_inventory:home')
+        href=App.reverse('home')
     )
 
     context = {
@@ -244,8 +290,7 @@ def add_dam(request, app_workspace):
         'cancel_button': cancel_button,
     }
 
-    return render(request, 'dam_inventory/add_dam.html', context)
-
+    return App.render(request, 'add_dam.html', context)
 
 
 @controller(name='dams', url='dams', app_workspace=True)
@@ -276,4 +321,4 @@ def list_dams(request, app_workspace):
         'dams_table': dams_table
     }
 
-    return render(request, 'dam_inventory/list_dams.html', context)
+    return App.render(request, 'list_dams.html', context)
