@@ -1,8 +1,9 @@
-from django.shortcuts import render
-from tethys_sdk.permissions import login_required
+from tethys_sdk.routing import controller
 from tethys_sdk.gizmos import Button
+from .app import App
 
-@login_required()
+
+@controller
 def home(request):
     """
     Controller for the app home page.
@@ -10,36 +11,36 @@ def home(request):
     save_button = Button(
         display_text='',
         name='save-button',
-        icon='glyphicon glyphicon-floppy-disk',
+        icon='save',
         style='success',
         attributes={
-            'data-toggle':'tooltip',
-            'data-placement':'top',
-            'title':'Save'
+            'data-bs-toggle': 'tooltip',
+            'data-bs-placement': 'top',
+            'title': 'Save'
         }
     )
 
     edit_button = Button(
         display_text='',
         name='edit-button',
-        icon='glyphicon glyphicon-edit',
+        icon='pen',
         style='warning',
         attributes={
-            'data-toggle':'tooltip',
-            'data-placement':'top',
-            'title':'Edit'
+            'data-bs-toggle': 'tooltip',
+            'data-bs-placement': 'top',
+            'title': 'Edit'
         }
     )
 
     remove_button = Button(
         display_text='',
         name='remove-button',
-        icon='glyphicon glyphicon-remove',
+        icon='trash',
         style='danger',
         attributes={
-            'data-toggle':'tooltip',
-            'data-placement':'top',
-            'title':'Remove'
+            'data-bs-toggle': 'tooltip',
+            'data-bs-placement': 'top',
+            'title': 'Remove'
         }
     )
 
@@ -47,9 +48,9 @@ def home(request):
         display_text='Previous',
         name='previous-button',
         attributes={
-            'data-toggle':'tooltip',
-            'data-placement':'top',
-            'title':'Previous'
+            'data-bs-toggle': 'tooltip',
+            'data-bs-placement': 'top',
+            'title': 'Previous'
         }
     )
 
@@ -57,9 +58,9 @@ def home(request):
         display_text='Next',
         name='next-button',
         attributes={
-            'data-toggle':'tooltip',
-            'data-placement':'top',
-            'title':'Next'
+            'data-bs-toggle': 'tooltip',
+            'data-bs-placement': 'top',
+            'title': 'Next'
         }
     )
 
@@ -71,4 +72,4 @@ def home(request):
         'next_button': next_button
     }
 
-    return render(request, 'dam_inventory/home.html', context)
+    return App.render(request, 'home.html', context)
