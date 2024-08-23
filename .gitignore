@@ -7,6 +7,5 @@
 *.db
 *.sqlite
 *.DS_Store
-*.json
 .idea/
 services.yml
