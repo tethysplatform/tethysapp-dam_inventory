@@ -1,7 +1,7 @@
 from django.contrib import messages
 from django.utils.html import format_html
 from tethys_sdk.gizmos import (
-    MapView, MVDraw, MVView, Button, TextInput, DatePicker, SelectInput, DataTableView, PlotlyView
+    MapView, MVDraw, MVView, Button, TextInput, DatePicker, SelectInput, DataTableView, PlotlyView, MessageBox
 )
 from tethys_sdk.layouts import MapLayout
 from tethys_sdk.permissions import has_permission
@@ -10,11 +10,15 @@ from .app import App
 from .helpers import create_hydrograph
 from .model import Dam, add_new_dam, get_all_dams, assign_hydrograph_to_dam, get_hydrograph
 
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+
 
 @controller(name="home")
 class HomeMap(MapLayout):
     app = App
     base_template = f'{App.package}/base.html'
+    template_name = f'{App.package}/home.html'
     map_title = 'Dam Inventory'
     map_subtitle = 'Tutorial'
     basemaps = ['OpenStreetMap', 'ESRI']
@@ -26,6 +30,16 @@ class HomeMap(MapLayout):
         context.update({
             'can_add_dams': has_permission(request, 'add_dams'),
         })
+
+        message_box = MessageBox(
+            name='notification',
+            title='',
+            dismiss_button='Nevermind',
+            affirmative_button='Refresh',
+            affirmative_attributes='onClick=window.location.href=window.location.href;'
+        )
+
+        context.update({"message_box": message_box})
 
         # Call the MapLayout get_context method to initialize the map view
         context = super().get_context(request, context, *args, **kwargs)
@@ -250,6 +264,17 @@ def add_dam(request):
                 )
             else:
                 messages.warning(request, 'Unable to add dam "{0}", because the inventory is full.'.format(name))
+
+            new_num_dams = session.query(Dam).count()
+
+            if new_num_dams > num_dams:
+                channel_layer = get_channel_layer()
+                async_to_sync(channel_layer.group_send)(
+                    "notifications", {
+                        "type": "dam_notifications",
+                        "message": "New Dam"
+                    }
+                )
 
             return App.redirect(App.reverse('home'))
 
