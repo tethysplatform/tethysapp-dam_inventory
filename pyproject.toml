@@ -27,15 +27,14 @@ include-package-data = true
 [tool.setuptools.packages.find]
 include = ["tethysapp*"]
 
+[tool.setuptools.packages.find]
+include = ["*"]
+where = ["."]
+
 [tool.setuptools.package-data]
 "tethysapp.dam_inventory" = [
-    "*.js",
-    "*.png",
-    "*.gif",
-    "*.jpg",
-    "*.html",
-    "*.css",
-    "*.gltf",
-    "*.json",
-    "*.svg",
+    "templates/**/*",
+    "public/**/*",
+    "resources/**/*",
+    "workspaces/**/*"
 ]
